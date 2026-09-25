@@ -1,6 +1,6 @@
 {
   "app.name": "Toran",
-  "app.tagline": "Digital heritage archive for the Dr. Ambedkar International Centre",
+  "app.tagline": "Digital heritage archive for the Dr. Ambedkar National Memorial",
   "nav.back": "Back",
   "nav.home": "Home",
   "nav.forward": "Forward",
@@ -118,7 +118,7 @@
   "visitor.sound": "Sound",
   "visitor.sound.standard": "Standard",
   "visitor.sound.louder": "Louder",
-  "takehome.place": "Dr. Ambedkar International Centre, 15 Janpath, New Delhi",
+  "takehome.place": "Dr. Ambedkar National Memorial, 26 Alipur Road, Delhi",
   "takehome.title": "What you kept",
   "takehome.loading": "Finding your passages in the archive",
   "takehome.empty": "This link holds no passages.",

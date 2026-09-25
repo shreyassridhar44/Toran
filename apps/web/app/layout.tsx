@@ -5,7 +5,7 @@ import './globals.css';
 export const metadata: Metadata = {
   title: 'Toran',
   description:
-    'Digital heritage archive and institutional twin for the Dr. Ambedkar International Centre.',
+    'Digital heritage archive and institutional twin for the Dr. Ambedkar National Memorial, 26 Alipur Road, Delhi.',
 };
 
 export const viewport: Viewport = {
@@ -26,7 +26,21 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    /*
+      suppressHydrationWarning, on this element only.
+      
+      The document element is deliberately not React's to own after mount. The
+      i18n provider rewrites lang and dir on it so CSS :lang() and the Indic
+      font stack apply; the twin and the system page set data-theme on it; the
+      kiosk and the ruler set --device-scale. All of that lands after
+      hydration, but any of it — and any reader's theme extension, which
+      rewrites html before React has loaded at all — makes the server's
+      markup and the client's disagree about this one tag.
+      
+      It suppresses the warning one level deep, for this element's own
+      attributes. Everything inside it is still checked.
+    */
+    <html lang="en" suppressHydrationWarning>
       <body>
         <I18nProvider>{children}</I18nProvider>
       </body>
