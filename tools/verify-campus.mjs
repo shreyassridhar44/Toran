@@ -29,6 +29,8 @@ import {
   wingBand,
   zoneAt,
 } from '../apps/web/src/twin/campus.ts';
+import { HALL, SECTIONS } from '../apps/web/src/twin/layout.ts';
+import { DEVICES } from '../apps/web/src/fleet/devices.ts';
 
 let failures = 0;
 const check = (label, ok, detail = '') => {
@@ -142,7 +144,6 @@ check(
   maxZ < MEMORIAL.plinthFrontZ && minZ > MEMORIAL.plinthBackZ,
   `z ${maxZ.toFixed(1)} to ${minZ.toFixed(1)}, plinth ${MEMORIAL.plinthFrontZ} to ${MEMORIAL.plinthBackZ}`,
 );
-
 
 // ---- the page faces sit on top of the stack, not through it ----
 console.log('\nThe page faces');
@@ -309,6 +310,91 @@ check(
   zoneAt(MEMORIAL.archZ + 0.1) === 'campus' && zoneAt(MEMORIAL.archZ - 0.1) === 'inside',
   `at z ${MEMORIAL.archZ}`,
 );
+
+// ---- the interior, and where the thirteen devices stand in it ----
+console.log('\nThe hall');
+
+check(
+  'the hall stands on the plinth',
+  HALL.floorY === MEMORIAL.plinthY,
+  `floor ${HALL.floorY} m, plinth ${MEMORIAL.plinthY} m`,
+);
+check(
+  'the hall fits inside the building',
+  HALL.back > MEMORIAL.plinthBackZ && HALL.halfWidth < WING.axBase,
+  `back z ${HALL.back} of ${MEMORIAL.plinthBackZ}, half width ${HALL.halfWidth}`,
+);
+check(
+  'the Preamble hangs on the wall opposite the entrance',
+  HALL.galleryZ < HALL.back + 3 && HALL.galleryZ > HALL.back,
+  `gallery z ${HALL.galleryZ}, back wall ${HALL.back}`,
+);
+for (const [name, section] of Object.entries(SECTIONS)) {
+  check(
+    `the ${name} section is inside the nave`,
+    section.fromZ <= HALL.atriumBackZ && section.toZ > HALL.back,
+    `z ${section.fromZ} to ${section.toZ}`,
+  );
+}
+
+console.log('\nThe devices');
+
+const HALF = { kiosk: 0.6, desk: 1.2, booth: 1.32, console: 1.0, totem: 0.6, wall: 1.5 };
+const standing = DEVICES.filter((d) => d.form !== 'wall');
+
+check('the roster is still thirteen', DEVICES.length === 13, `${DEVICES.length} devices`);
+check(
+  'every device stands on the floor, not on the ground',
+  DEVICES.every((d) => d.position[1] >= HALL.floorY - 0.01),
+  `lowest ${Math.min(...DEVICES.map((d) => d.position[1]))} m`,
+);
+check(
+  'nothing stands on the centre aisle',
+  standing.every((d) => Math.abs(d.position[0]) > 2.2),
+  `nearest ${Math.min(...standing.map((d) => Math.abs(d.position[0]))).toFixed(1)} m off the axis`,
+);
+// A device turned away from the aisle shows its back to everyone who walks up
+// to it. Two were moved across the hall and kept the heading they had on the
+// other side, which is exactly the mistake this catches.
+check(
+  'every device faces the aisle rather than the wall behind it',
+  standing.every((d) => {
+    const heading = Math.sin(d.rotationY);
+    return Math.abs(heading) < 0.1 || Math.sign(heading) !== Math.sign(d.position[0]);
+  }),
+  '',
+);
+check(
+  'no device stands in the colonnade',
+  standing.every(
+    (d) =>
+      Math.abs(Math.abs(d.position[0]) - HALL.colonnadeX) > (HALF[d.form] ?? 0.8) - 0.25,
+  ),
+  '',
+);
+{
+  let closest = Infinity;
+  let pair = '';
+  for (let i = 0; i < DEVICES.length; i++) {
+    for (let j = i + 1; j < DEVICES.length; j++) {
+      const a = DEVICES[i];
+      const b = DEVICES[j];
+      const gap = Math.hypot(
+        a.position[0] - b.position[0],
+        a.position[2] - b.position[2],
+      );
+      if (gap < closest) {
+        closest = gap;
+        pair = `${a.deviceId} and ${b.deviceId}`;
+      }
+    }
+  }
+  check(
+    'no two devices overlap',
+    closest > 2.5,
+    `closest ${pair}, ${closest.toFixed(1)} m`,
+  );
+}
 
 console.log(failures === 0 ? '\nAll checks passed.' : `\n${failures} check(s) FAILED.`);
 process.exit(failures === 0 ? 0 : 1);

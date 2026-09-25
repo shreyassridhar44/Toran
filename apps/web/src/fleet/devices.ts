@@ -14,7 +14,6 @@
  */
 
 import type { DeviceChannel, DeviceConfig, DeviceHealth } from '@toran/contracts';
-import { HALL } from '../twin/layout';
 
 /** Physical form, which decides the geometry the scene draws. */
 export type DeviceForm = 'kiosk' | 'wall' | 'desk' | 'booth' | 'console' | 'totem';
@@ -32,15 +31,30 @@ const Q = Math.PI / 4;
  * a standing adult and inside the 15 to 48 inch reach range for a visitor in
  * a wheelchair. They were at 3.1 m, where nobody could touch them.
  */
-const WALL_CENTRE_Y = HALL.floorY + 1.6;
+/**
+ * Floor level: the top of the memorial's plinth, which is what the hall stands
+ * on.
+ *
+ * Stated here rather than imported from twin/layout. Toran Core loads this file
+ * directly to seed its fleet, and it is the only module in the twin that a Node
+ * process reads; importing the layout would drag the whole interior model into
+ * the server and break its resolution. verify-campus asserts the two agree.
+ */
+const F = 2.0;
 
-/** Floor level for everything that stands on it. */
-const F = HALL.floorY;
+const WALL_CENTRE_Y = F + 1.6;
 
 /**
- * The atrium is the domed space under the rotunda, and the statue stands in a
- * well at the middle of it. Devices in that room are ranged around the wall,
- * clear of the balustrade: four of them used to stand where the well now is.
+ * Each device stands **in front of the section it explains**, beside the centre
+ * aisle and never on it, the way the interpretive plaque stands in front of the
+ * banyan tableau in image6. The sections are declared in twin/layout.ts:
+ *
+ *   atrium          the statue, under the dome        Welcome
+ *   mural, left     backlit archive photographs       Timeline (set into it)
+ *   study, right    the recreated study               Reading Room
+ *   banyan, left    the tableau and its backdrop      Audio and Video
+ *   vitrines, right manuscript cases                  Manuscripts
+ *   the far wall    the Preamble                      Provenance
  */
 
 export const DEVICES: readonly HallDevice[] = [
@@ -49,8 +63,8 @@ export const DEVICES: readonly HallDevice[] = [
     channel: 'entrance',
     form: 'totem',
     defaultLanguage: 'en',
-    position: [-3.6, F, 9.4],
-    rotationY: 0.35,
+    position: [-5.6, F, 7.4],
+    rotationY: 0.5,
     version: 1,
   },
   {
@@ -58,8 +72,8 @@ export const DEVICES: readonly HallDevice[] = [
     channel: 'reading',
     form: 'kiosk',
     defaultLanguage: 'en',
-    position: [-9.5, F, 5.0],
-    rotationY: Q * 0.9,
+    position: [5.8, F, -13.5],
+    rotationY: -Q * 0.9,
     version: 1,
   },
   {
@@ -67,8 +81,8 @@ export const DEVICES: readonly HallDevice[] = [
     channel: 'reading',
     form: 'kiosk',
     defaultLanguage: 'mr',
-    position: [-9.5, F, -4.0],
-    rotationY: Q * 0.9,
+    position: [5.8, F, -20.5],
+    rotationY: -Q * 0.9,
     version: 1,
   },
   {
@@ -76,8 +90,8 @@ export const DEVICES: readonly HallDevice[] = [
     channel: 'provenance',
     form: 'kiosk',
     defaultLanguage: 'en',
-    position: [9.5, F, 5.0],
-    rotationY: -Q * 0.9,
+    position: [-4.8, F, -31.5],
+    rotationY: 0.42,
     version: 1,
   },
   {
@@ -85,8 +99,8 @@ export const DEVICES: readonly HallDevice[] = [
     channel: 'manuscript',
     form: 'kiosk',
     defaultLanguage: 'en',
-    position: [9.5, F, -4.0],
-    rotationY: -Q * 0.9,
+    position: [6.6, F, -30.0],
+    rotationY: -Q * 0.8,
     version: 1,
   },
   {
@@ -94,7 +108,7 @@ export const DEVICES: readonly HallDevice[] = [
     channel: 'timeline',
     form: 'wall',
     defaultLanguage: 'en',
-    position: [-11.55, WALL_CENTRE_Y, -13],
+    position: [-11.55, WALL_CENTRE_Y, -13.5],
     rotationY: Math.PI / 2,
     version: 1,
   },
@@ -103,7 +117,7 @@ export const DEVICES: readonly HallDevice[] = [
     channel: 'timeline',
     form: 'wall',
     defaultLanguage: 'hi',
-    position: [-11.55, WALL_CENTRE_Y, -18],
+    position: [-11.55, WALL_CENTRE_Y, -18.0],
     rotationY: Math.PI / 2,
     version: 1,
   },
@@ -112,7 +126,7 @@ export const DEVICES: readonly HallDevice[] = [
     channel: 'timeline',
     form: 'wall',
     defaultLanguage: 'mr',
-    position: [-11.55, WALL_CENTRE_Y, -23],
+    position: [-11.55, WALL_CENTRE_Y, -22.5],
     rotationY: Math.PI / 2,
     version: 1,
   },
@@ -123,8 +137,8 @@ export const DEVICES: readonly HallDevice[] = [
     channel: 'assistant',
     form: 'desk',
     defaultLanguage: 'en',
-    position: [5.5, F, -8.5],
-    rotationY: -0.5,
+    position: [-6.8, F, -20.0],
+    rotationY: 0.62,
     version: 1,
   },
   {
@@ -132,8 +146,8 @@ export const DEVICES: readonly HallDevice[] = [
     channel: 'audio',
     form: 'booth',
     defaultLanguage: 'hi',
-    position: [6.2, F, -12.5],
-    rotationY: -0.55,
+    position: [6.4, F, -25.5],
+    rotationY: -0.62,
     version: 1,
   },
   // Staggered so the pair do not line up, and their plates do not stack, from the door.
@@ -142,8 +156,8 @@ export const DEVICES: readonly HallDevice[] = [
     channel: 'av',
     form: 'kiosk',
     defaultLanguage: 'en',
-    position: [-5.7, F, -14.5],
-    rotationY: Q * 0.7,
+    position: [-6.6, F, -28.5],
+    rotationY: Q * 0.8,
     version: 1,
   },
   {
@@ -151,8 +165,8 @@ export const DEVICES: readonly HallDevice[] = [
     channel: 'av',
     form: 'kiosk',
     defaultLanguage: 'en',
-    position: [-3.7, F, -19.6],
-    rotationY: Q * 0.55,
+    position: [-6.6, F, -34.0],
+    rotationY: Q * 0.8,
     version: 1,
   },
   {
@@ -160,8 +174,8 @@ export const DEVICES: readonly HallDevice[] = [
     channel: 'curator',
     form: 'console',
     defaultLanguage: 'en',
-    position: [6.2, F, -19],
-    rotationY: -0.5,
+    position: [10.1, F, -35.5],
+    rotationY: -1.0,
     version: 1,
   },
 ];

@@ -1233,3 +1233,196 @@ export function coffer(size = 256): THREE.CanvasTexture {
 
   return toTexture(c, true, true);
 }
+
+/**
+ * The backlit archive wall: black and white photographs, edge to edge, with
+ * printed text panels between them, as in image5.
+ *
+ * The photographs are not photographs. What the eye reads at gallery distance
+ * is tone, grain, and the shape of a crowd — so each panel is built from those:
+ * a sky that falls to a dark ground, a band of massed heads at the horizon, a
+ * few larger figures nearer the camera, and film grain over all of it. Anything
+ * more literal would be a lie about what the archive actually contains.
+ */
+export function mural(size = 512): THREE.CanvasTexture {
+  const [c, ctx] = canvas(size, size);
+  const panels = 3;
+  const w = size / panels;
+
+  for (let p = 0; p < panels; p++) {
+    const x0 = p * w;
+    const seed = 90 + p * 31;
+    // A text panel every third frame, as the wall in image5 interleaves them.
+    const isText = p % 3 === 2;
+
+    if (isText) {
+      ctx.fillStyle = '#e8e4dc';
+      ctx.fillRect(x0, 0, w, size);
+      ctx.fillStyle = '#2a2724';
+      ctx.font = `600 ${Math.round(size * 0.028)}px ${FONT_UI}`;
+      ctx.textAlign = 'left';
+      ctx.fillText('DR. B. R. AMBEDKAR', x0 + w * 0.08, size * 0.1);
+      ctx.fillStyle = 'rgba(42,39,36,0.55)';
+      for (let line = 0; line < 30; line++) {
+        const last = line % 6 === 5;
+        const lw = (last ? 0.4 + hash(line, p, 5) * 0.3 : 0.84) * w;
+        ctx.fillRect(x0 + w * 0.08, size * 0.15 + line * size * 0.026, lw, 2);
+      }
+      continue;
+    }
+
+    // Sky to ground, the tonal spine of any crowd photograph.
+    const sky = ctx.createLinearGradient(0, 0, 0, size);
+    sky.addColorStop(0, '#d8d5d0');
+    sky.addColorStop(0.46, '#a8a49e');
+    sky.addColorStop(0.62, '#55524d');
+    sky.addColorStop(1, '#22201e');
+    ctx.fillStyle = sky;
+    ctx.fillRect(x0, 0, w, size);
+
+    // The crowd: a dense band of heads along the horizon, thinning upward.
+    for (let i = 0; i < 900; i++) {
+      const u = hash(i, seed, 1);
+      const v = hash(i, seed, 2);
+      const y = size * (0.6 + v * 0.42);
+      const r = size * (0.004 + v * 0.012);
+      const tone = 30 + hash(i, seed, 3) * 90;
+      ctx.fillStyle = `rgba(${tone},${tone},${tone},0.85)`;
+      ctx.beginPath();
+      ctx.arc(x0 + u * w, y, r, 0, Math.PI * 2);
+      ctx.fill();
+      // Shoulders under each head, which is what makes a dot read as a person.
+      ctx.fillRect(x0 + u * w - r, y + r * 0.7, r * 2, r * 2.4);
+    }
+
+    // Two or three figures nearer the lens, in the lower third.
+    for (let i = 0; i < 3; i++) {
+      const fx = x0 + w * (0.2 + hash(i, seed, 7) * 0.6);
+      const fy = size * (0.76 + hash(i, seed, 8) * 0.1);
+      const fh = size * (0.12 + hash(i, seed, 9) * 0.06);
+      ctx.fillStyle = 'rgba(18,17,16,0.9)';
+      ctx.beginPath();
+      ctx.arc(fx, fy, fh * 0.17, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillRect(fx - fh * 0.2, fy + fh * 0.12, fh * 0.4, fh * 0.78);
+    }
+  }
+
+  // Film grain, and the frame lines between panels.
+  const img = ctx.getImageData(0, 0, size, size);
+  for (let i = 0; i < img.data.length; i += 4) {
+    const n = (hash(i, 3, 11) - 0.5) * 26;
+    img.data[i] = Math.max(0, Math.min(255, img.data[i]! + n));
+    img.data[i + 1] = Math.max(0, Math.min(255, img.data[i + 1]! + n));
+    img.data[i + 2] = Math.max(0, Math.min(255, img.data[i + 2]! + n));
+  }
+  ctx.putImageData(img, 0, 0);
+  ctx.strokeStyle = '#141210';
+  ctx.lineWidth = 4;
+  for (let p = 1; p < panels; p++) {
+    ctx.beginPath();
+    ctx.moveTo(p * w, 0);
+    ctx.lineTo(p * w, size);
+    ctx.stroke();
+  }
+
+  return toTexture(c, true, true);
+}
+
+/**
+ * The painted backdrop behind the banyan tableau: a forest, a great tree with
+ * aerial roots, and daylight falling through the canopy, after image6.
+ *
+ * Painted rather than modelled because that is what it is in the building — a
+ * flat scenic backdrop with the foreground built out in front of it.
+ */
+export function forest(size = 384): THREE.CanvasTexture {
+  const [c, ctx] = canvas(size, size);
+
+  // Canopy light: bright and green above, falling to leaf litter below.
+  const depth = ctx.createLinearGradient(0, 0, 0, size);
+  depth.addColorStop(0, '#5c6b3a');
+  depth.addColorStop(0.28, '#41522c');
+  depth.addColorStop(0.62, '#2f3a24');
+  depth.addColorStop(0.84, '#4a4128');
+  depth.addColorStop(1, '#3a331f');
+  ctx.fillStyle = depth;
+  ctx.fillRect(0, 0, size, size);
+
+  // Dappled light through the leaves.
+  for (let i = 0; i < 260; i++) {
+    const x = hash(i, 5, 1) * size;
+    const y = hash(i, 5, 2) * size * 0.72;
+    const r = size * (0.01 + hash(i, 5, 3) * 0.045);
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, 'rgba(206,214,150,0.4)');
+    g.addColorStop(1, 'rgba(206,214,150,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(x - r, y - r, r * 2, r * 2);
+  }
+
+  // Distant trunks, receding and paler with depth.
+  for (let i = 0; i < 16; i++) {
+    const x = hash(i, 9, 1) * size;
+    const w = size * (0.012 + hash(i, 9, 2) * 0.03);
+    const fade = 0.2 + hash(i, 9, 3) * 0.3;
+    ctx.fillStyle = `rgba(48,44,32,${fade})`;
+    ctx.fillRect(x, size * 0.1, w, size * 0.78);
+  }
+
+  // The banyan itself: a broad trunk off centre, with aerial roots falling
+  // from the canopy. The roots are the whole character of the tree.
+  const cx = size * 0.56;
+  ctx.fillStyle = '#4a4232';
+  ctx.beginPath();
+  ctx.moveTo(cx - size * 0.13, size);
+  ctx.lineTo(cx - size * 0.075, size * 0.2);
+  ctx.lineTo(cx + size * 0.075, size * 0.2);
+  ctx.lineTo(cx + size * 0.14, size);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = '#453d2e';
+  for (let i = 0; i < 22; i++) {
+    const x = cx + (hash(i, 13, 1) - 0.5) * size * 0.52;
+    const top = size * (0.16 + hash(i, 13, 2) * 0.14);
+    const bottom = size * (0.6 + hash(i, 13, 3) * 0.38);
+    ctx.lineWidth = 1.5 + hash(i, 13, 4) * 4;
+    ctx.beginPath();
+    ctx.moveTo(x, top);
+    ctx.bezierCurveTo(
+      x + (hash(i, 13, 5) - 0.5) * 20,
+      (top + bottom) / 2,
+      x + (hash(i, 13, 6) - 0.5) * 16,
+      (top + bottom) / 2,
+      x + (hash(i, 13, 7) - 0.5) * 10,
+      bottom,
+    );
+    ctx.stroke();
+  }
+
+  // Buttress roots spreading across the ground at its foot.
+  ctx.fillStyle = '#524832';
+  for (let i = 0; i < 7; i++) {
+    const x = cx + (hash(i, 17, 1) - 0.5) * size * 0.4;
+    ctx.beginPath();
+    ctx.moveTo(x, size * 0.78);
+    ctx.quadraticCurveTo(
+      x + (hash(i, 17, 2) - 0.5) * 60,
+      size * 0.93,
+      x + (hash(i, 17, 3) - 0.5) * 110,
+      size,
+    );
+    ctx.lineTo(x + (hash(i, 17, 3) - 0.5) * 110 + 26, size);
+    ctx.quadraticCurveTo(
+      x + (hash(i, 17, 2) - 0.5) * 60 + 18,
+      size * 0.94,
+      x + 12,
+      size * 0.78,
+    );
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  return toTexture(c, true);
+}

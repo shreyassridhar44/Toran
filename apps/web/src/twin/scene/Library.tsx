@@ -11,15 +11,15 @@
 import { useLayoutEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { box, mergeParts, type Part } from '../geometry';
-import { HALL } from '../layout';
+import { HALL, SECTIONS } from '../layout';
 import { hallMaterials } from '../materials';
 import { mulberry32 } from '../random';
 
 const BACK_X = HALL.halfWidth - 0.1;
 const DEPTH = 0.85;
-// Behind the atrium: in front of that line the room is the domed rotunda.
-const Z_START = HALL.atriumBackZ - 1.5;
-const Z_END = -25;
+// The bookcases of the study: they line its back and side walls.
+const Z_START = SECTIONS.study.fromZ;
+const Z_END = SECTIONS.study.toZ;
 const BAYS = 10;
 const LEVELS = 12;
 const LEVEL_GAP = 0.52;

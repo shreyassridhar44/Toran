@@ -22,7 +22,7 @@ import { ENTRY, ENTRY_DURATION_MS, Flight, HOME, prefersReducedMotion } from './
 
 /** Where the visitor may look from, on the hall's floor rather than the ground. */
 const BOUNDARY = new THREE.Box3(
-  new THREE.Vector3(-4, HALL.floorY + 1.5, -19),
+  new THREE.Vector3(-4, HALL.floorY + 1.5, -32),
   new THREE.Vector3(4, HALL.floorY + 5, 7),
 );
 

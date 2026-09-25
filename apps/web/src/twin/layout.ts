@@ -8,22 +8,35 @@
  * whose positions are world coordinates because the fly-in reads them directly.
  */
 
-import { MEMORIAL } from './campus';
-
 export const HALL = {
   halfWidth: 12,
   height: 12,
   front: 13,
-  back: -30,
+  /**
+   * The nave runs to the back of the building rather than stopping halfway
+   * down it. At −30 the hall was twenty metres long and had to hold the
+   * photograph gallery, the study, the manuscripts, the banyan and the
+   * Constitution gallery; the memorial's own back wall is at −39, and the
+   * room now uses the length it has.
+   */
+  back: -38,
   doorHalfWidth: 3.2,
   doorHeight: 8.6,
   colonnadeX: 8.6,
-  columnsZ: [-11, -16, -21] as const,
-  archZ: -25,
-  galleryZ: -28.5,
+  columnsZ: [-11, -16, -21, -26, -31] as const,
+  archZ: -33,
+  galleryZ: -36.5,
 
-  /** Height of the interior floor above the campus ground. */
-  floorY: MEMORIAL.plinthY,
+  /**
+   * Height of the interior floor above the campus ground: the top of the
+   * memorial's plinth.
+   *
+   * Stated rather than imported from campus.ts, so that this module and the
+   * fleet config it sits beside stay loadable by a plain Node process — the
+   * verifiers read them, and Toran Core reads the fleet. verify-campus asserts
+   * this equals MEMORIAL.plinthY, so the two cannot drift.
+   */
+  floorY: 2.0,
 
   /**
    * Where the atrium ends and the nave begins.
@@ -49,6 +62,24 @@ export const SUN = { from: [-20, 26, -6] as const, to: [0, 0, -6] as const };
  * The statue of Dr. Ambedkar, standing in a sunken well at the centre of the
  * atrium and facing the entrance. In hall coordinates.
  */
+/**
+ * The exhibit sections, in hall coordinates. Each runs along a side wall, and
+ * the centre aisle is left clear so the sightline from the atrium to the
+ * Preamble is never blocked — which is the one rule the interior was composed
+ * around before this pass and still is.
+ */
+export const SECTIONS = {
+  /** Backlit archive photographs down the left wall, with the timeline panels
+   * set into them. */
+  mural: { x: -1, fromZ: -11, toZ: -25 },
+  /** The recreated study, behind glass on the right. */
+  study: { x: 1, fromZ: -11.5, toZ: -24 },
+  /** Manuscript cases, right, behind the study. */
+  vitrines: { x: 1, fromZ: -26.5, toZ: -34 },
+  /** The banyan diorama, left, behind the mural wall. */
+  banyan: { x: -1, fromZ: -26.5, toZ: -36 },
+} as const;
+
 export const STATUE = {
   z: 0,
   /** Radius of the well the pedestal stands in, and how far it drops. */

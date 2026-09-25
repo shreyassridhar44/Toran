@@ -32,6 +32,7 @@ import { Lights } from './scene/Lights';
 import { Campus } from './scene/campus/Campus';
 import { City } from './scene/city/City';
 import { Atrium } from './scene/interior/Atrium';
+import { Galleries } from './scene/interior/Galleries';
 import { Memorial } from './scene/Memorial';
 import { Statue } from './scene/interior/Statue';
 import { Shadows } from './scene/Shadows';
@@ -259,6 +260,7 @@ function Scene({
           <Architecture />
           <Floor />
           <Library />
+          <Galleries />
           <Gallery />
           <Shadows />
           <Atmosphere />

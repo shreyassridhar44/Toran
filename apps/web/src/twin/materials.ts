@@ -206,6 +206,8 @@ export interface CampusMaterials {
   glazing: THREE.MeshStandardMaterial;
   /** Its handrail, and the stanchions in the galleries. */
   steel: THREE.MeshStandardMaterial;
+  /** The retractable belt between those stanchions. */
+  navy: THREE.MeshStandardMaterial;
   /** Lane markings on the road. */
   marking: THREE.MeshStandardMaterial;
   /** Car paintwork, autorickshaw green, bus red. */
@@ -373,6 +375,7 @@ export function campusMaterials(): CampusMaterials {
       metalness: 0.85,
       roughness: 0.28,
     }),
+    navy: new THREE.MeshStandardMaterial({ color: '#232c44', roughness: 0.88 }),
     marking: new THREE.MeshStandardMaterial({ color: '#d8d2c2', roughness: 0.85 }),
     // One colour for every car, because at the distance the road is seen a
     // fleet of different colours reads as noise rather than as traffic.
