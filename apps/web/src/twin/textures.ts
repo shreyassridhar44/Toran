@@ -843,11 +843,17 @@ export function asphalt(size = 256): THREE.CanvasTexture {
 }
 
 /**
- * The facade of a neighbouring block: rendered white, with windows, balcony
- * openings and the stained band that every Delhi parapet grows.
+ * One storey of a Delhi residential block: rendered wall, a window, a balcony
+ * opening, and the floor band under it.
  *
- * One texture stretched over a box is what makes forty buildings affordable.
- * Modelled windows on the same forty would cost more than the memorial does.
+ * A single storey rather than a whole building, so it can tile. Blocks along
+ * the road run three to five storeys and the windows have to come out the same
+ * size on all of them; baking four storeys into one map and stretching it over
+ * whatever height a block happens to be gives every building its own window
+ * scale, which is the one thing that makes a row read as wallpaper.
+ *
+ * Tiled by world-space projection at one repeat per storey, so a wall four
+ * storeys tall simply gets four of these.
  */
 export function facade(size = 256): THREE.CanvasTexture {
   const [c, ctx] = canvas(size, size);
@@ -855,38 +861,61 @@ export function facade(size = 256): THREE.CanvasTexture {
   ctx.fillStyle = '#d9d2c4';
   ctx.fillRect(0, 0, size, size);
 
-  // Weathering: rain streaks below the parapet, grime at the base.
-  const grime = ctx.createLinearGradient(0, 0, 0, size);
-  grime.addColorStop(0, 'rgba(90,80,66,0.34)');
-  grime.addColorStop(0.16, 'rgba(90,80,66,0.06)');
-  grime.addColorStop(0.86, 'rgba(70,62,52,0.04)');
-  grime.addColorStop(1, 'rgba(58,50,42,0.3)');
-  ctx.fillStyle = grime;
-  ctx.fillRect(0, 0, size, size);
-
-  const storeys = 4;
-  const bays = 4;
-  const sh = size / storeys;
-  const bw = size / bays;
-  for (let s = 0; s < storeys; s++) {
-    for (let b = 0; b < bays; b++) {
-      const x = b * bw + bw * 0.22;
-      const y = s * sh + sh * 0.2;
-      const w = bw * 0.56;
-      const h = sh * 0.46;
-      // A lit window here and there, so the block is inhabited at dusk.
-      const lit = hash(b, s, 3) > 0.74;
-      ctx.fillStyle = lit ? '#e8c98c' : '#3c4048';
-      ctx.fillRect(x, y, w, h);
-      ctx.strokeStyle = 'rgba(255,255,255,0.5)';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(x, y, w, h);
-      ctx.fillStyle = 'rgba(160,150,136,0.7)';
-      ctx.fillRect(x - 2, y + h, w + 4, 3);
+  // Render is never flat: patchy, and dirtier toward the floor band.
+  const img = ctx.getImageData(0, 0, size, size);
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const k = 0.93 + fbm(x / size, y / size, 5, 3, 67) * 0.14;
+      const i = (y * size + x) * 4;
+      img.data[i] = Math.min(255, img.data[i]! * k);
+      img.data[i + 1] = Math.min(255, img.data[i + 1]! * k);
+      img.data[i + 2] = Math.min(255, img.data[i + 2]! * k);
     }
-    ctx.fillStyle = 'rgba(178,168,152,0.45)';
-    ctx.fillRect(0, (s + 1) * sh - 4, size, 4);
   }
+  ctx.putImageData(img, 0, 0);
+
+  // Two bays: a window and a balcony opening.
+  const pad = size * 0.09;
+  const bay = (size - pad * 3) / 2;
+  const top = size * 0.2;
+  const h = size * 0.46;
+
+  // Window, recessed, with a sill and a reveal.
+  ctx.fillStyle = '#3c4048';
+  ctx.fillRect(pad, top, bay, h);
+  ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(pad, top, bay, h);
+  // Glazing bars.
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(pad + bay / 2, top);
+  ctx.lineTo(pad + bay / 2, top + h);
+  ctx.stroke();
+  ctx.fillStyle = 'rgba(160,150,136,0.85)';
+  ctx.fillRect(pad - 3, top + h, bay + 6, 5);
+
+  // Balcony: darker opening with a rail across it.
+  const bx = pad * 2 + bay;
+  ctx.fillStyle = '#33373d';
+  ctx.fillRect(bx, top, bay, h);
+  ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(bx, top, bay, h);
+  ctx.fillStyle = 'rgba(120,112,100,0.9)';
+  ctx.fillRect(bx, top + h * 0.58, bay, 6);
+  for (let i = 1; i < 7; i++) {
+    ctx.fillRect(bx + (i / 7) * bay - 1, top + h * 0.58, 2, h * 0.42);
+  }
+
+  // The floor band, and the grime that collects under it.
+  ctx.fillStyle = 'rgba(178,168,152,0.55)';
+  ctx.fillRect(0, size - size * 0.1, size, size * 0.06);
+  const dirt = ctx.createLinearGradient(0, size - size * 0.1, 0, size);
+  dirt.addColorStop(0, 'rgba(70,62,52,0.28)');
+  dirt.addColorStop(1, 'rgba(70,62,52,0)');
+  ctx.fillStyle = dirt;
+  ctx.fillRect(0, size - size * 0.1, size, size * 0.1);
 
   return toTexture(c, true, true);
 }

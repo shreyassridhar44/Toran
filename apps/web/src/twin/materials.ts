@@ -178,13 +178,30 @@ export interface CampusMaterials {
   asphalt: THREE.MeshStandardMaterial;
   /** Kerbs, footpaths, and the concrete of the forecourt. */
   concrete: THREE.MeshStandardMaterial;
-  /** Neighbouring blocks, one texture over a box. */
+  /**
+   * Neighbouring blocks: one texture over a box, in three tints. A single
+   * colour across forty buildings reads as one printed backdrop rather than as
+   * a neighbourhood, and tinting is the cheapest variation there is.
+   */
   facade: THREE.MeshStandardMaterial;
+  facadeWarm: THREE.MeshStandardMaterial;
+  facadeCool: THREE.MeshStandardMaterial;
   /** Foliage, and the clipped hedges. */
   foliage: THREE.MeshStandardMaterial;
   bark: THREE.MeshStandardMaterial;
   /** The guard at the gate. Delhi police khaki. */
   khaki: THREE.MeshStandardMaterial;
+  /** Lane markings on the road. */
+  marking: THREE.MeshStandardMaterial;
+  /** Car paintwork, autorickshaw green, bus red. */
+  paintwork: THREE.MeshStandardMaterial;
+  autoGreen: THREE.MeshStandardMaterial;
+  busRed: THREE.MeshStandardMaterial;
+  /** Market awnings, and the dark glazed front of a shop. */
+  awning: THREE.MeshStandardMaterial;
+  shopfront: THREE.MeshStandardMaterial;
+  /** The skyline, which exists only to be haze-coloured and far away. */
+  distant: THREE.MeshStandardMaterial;
   /** Water in the fountains and the channel. */
   water: THREE.MeshStandardMaterial;
   /** The plume of a fountain jet, and the spray. Additive, unlit. */
@@ -295,11 +312,17 @@ export function campusMaterials(): CampusMaterials {
       metalness: 0,
     }),
     concrete: new THREE.MeshStandardMaterial({ color: '#9a9184', roughness: 0.9 }),
-    facade: new THREE.MeshStandardMaterial({
-      map: facade(256),
-      roughness: 0.92,
-      metalness: 0,
-    }),
+    ...(() => {
+      // One map between the three, so the variation is free in texture memory.
+      const map = facade(256);
+      const tint = (color: string) =>
+        new THREE.MeshStandardMaterial({ map, color, roughness: 0.92, metalness: 0 });
+      return {
+        facade: tint('#ffffff'),
+        facadeWarm: tint('#e6d4b8'),
+        facadeCool: tint('#c9cec9'),
+      };
+    })(),
     foliage: new THREE.MeshStandardMaterial({
       color: '#4e6134',
       roughness: 0.95,
@@ -310,6 +333,29 @@ export function campusMaterials(): CampusMaterials {
     }),
     bark: new THREE.MeshStandardMaterial({ color: '#4a3a2c', roughness: 0.96 }),
     khaki: new THREE.MeshStandardMaterial({ color: '#8a7b55', roughness: 0.9 }),
+    marking: new THREE.MeshStandardMaterial({ color: '#d8d2c2', roughness: 0.85 }),
+    // One colour for every car, because at the distance the road is seen a
+    // fleet of different colours reads as noise rather than as traffic.
+    paintwork: new THREE.MeshStandardMaterial({
+      color: '#9aa1a8',
+      metalness: 0.55,
+      roughness: 0.38,
+    }),
+    autoGreen: new THREE.MeshStandardMaterial({ color: '#2f6b46', roughness: 0.55 }),
+    busRed: new THREE.MeshStandardMaterial({ color: '#8f3626', roughness: 0.68 }),
+    awning: new THREE.MeshStandardMaterial({ color: '#7a5c3c', roughness: 0.92 }),
+    shopfront: new THREE.MeshStandardMaterial({
+      color: '#2b2a28',
+      roughness: 0.3,
+      metalness: 0.4,
+    }),
+    // Flat, unlit-looking and close to the fog, so the skyline sits at the
+    // horizon instead of standing out as a row of lit boxes.
+    distant: new THREE.MeshStandardMaterial({
+      color: '#9c9484',
+      roughness: 1,
+      metalness: 0,
+    }),
     water: new THREE.MeshStandardMaterial({
       color: '#2f5a6b',
       roughness: 0.08,

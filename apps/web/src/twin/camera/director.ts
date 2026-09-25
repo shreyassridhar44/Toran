@@ -32,10 +32,12 @@ export const ENTRY_DURATION_MS = 3600;
  * frame — arrives with the campus it needs to fly through.
  */
 export const ENTRY: readonly Shot[] = [
-  // High and steep, so the book reads as a book. The first version looked in
-  // from 54 m at a shallow angle, and the two pages foreshortened into one flat
-  // oval; the open-book plan only exists when you are looking down on it.
-  { position: [0, 96, 126], target: [0, 10, -6] },
+  // High and steep, so the book reads as a book: the first version looked in
+  // from 54 m at a shallow angle and the two pages foreshortened into one flat
+  // oval. Started beyond the road as well as above it, so the establishing shot
+  // carries the market, the traffic and the gate — at 126 m the camera stood
+  // inside the compound's own kerb and the city it flies over was never seen.
+  { position: [0, 108, 180], target: [0, 10, -8] },
   { position: [0, 44, 96], target: [0, 12, 0] },
   { position: [0, 13, 52], target: [0, 10, 0] },
   { position: [0, 2.5, 9.0], target: [0, 3.6, -26] },

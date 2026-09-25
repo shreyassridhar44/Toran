@@ -355,6 +355,15 @@ export const CITY = {
   marketDepth: 7.5,
   /** A low-detail skyline behind everything, to close the horizon. */
   skylineZ: 290,
+
+  /**
+   * How far beyond the compound wall the neighbours stand on the sides and at
+   * the back. The memorial is enclosed on all four sides in the photographs;
+   * building only along the road leaves a campus that ends in empty haze the
+   * moment the camera turns.
+   */
+  sideOffset: 26,
+  backOffset: 30,
 } as const;
 
 /**

@@ -29,6 +29,7 @@ import { Gallery } from './scene/Gallery';
 import { Library } from './scene/Library';
 import { Lights } from './scene/Lights';
 import { Campus } from './scene/campus/Campus';
+import { City } from './scene/city/City';
 import { Memorial } from './scene/Memorial';
 import { Shadows } from './scene/Shadows';
 import { Toran } from './scene/Toran';
@@ -217,15 +218,24 @@ function Scene({
           scale={[80, 14, 1]}
         />
       </Environment>
-      <Lights />
-
       <group ref={exterior}>
         <Memorial />
         <Campus />
+        <City />
         <Toran />
       </group>
 
       <group ref={interior}>
+        {/*
+          The hall's six lights live in here, not at scene level. Every one of
+          them shades every fragment of every standard material, and outdoors
+          they were lighting a campus they were never composed for — floodlights
+          aimed at a gateway, a spot on the Preamble, a glow inside a doorway —
+          on top of the exterior's own three. Nine lights over a screen filled
+          with ground, city and sky is what took the arrival to seventeen frames
+          a second.
+        */}
+        <Lights />
         <Architecture />
         <Floor />
         <Library />
