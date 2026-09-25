@@ -801,9 +801,11 @@ export function lawn(size = 256): THREE.CanvasTexture {
       const blade = hash(x, y, 77);
       const k = 0.72 + patch * 0.5 + blade * 0.14;
       const i = (y * size + x) * 4;
-      img.data[i] = Math.min(255, 96 * k * (1.06 - patch * 0.14));
-      img.data[i + 1] = Math.min(255, 116 * k);
-      img.data[i + 2] = Math.min(255, 58 * k * (0.9 + patch * 0.2));
+      // Olive rather than emerald. The first mix was a English-lawn green and
+      // made the campus read as a golf course laid out around a monument.
+      img.data[i] = Math.min(255, 116 * k * (1.06 - patch * 0.14));
+      img.data[i + 1] = Math.min(255, 120 * k);
+      img.data[i + 2] = Math.min(255, 62 * k * (0.9 + patch * 0.2));
       img.data[i + 3] = 255;
     }
   }
@@ -1069,4 +1071,42 @@ export function daysky(): THREE.CanvasTexture {
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, 8, 256);
   return toTexture(c, true);
+}
+
+/**
+ * Alpha for a fountain plume: brightest at the jet and thinning as it rises and
+ * spreads.
+ *
+ * Same discipline as `shaft` — three.js reads an alphaMap from the GREEN
+ * channel, so this is drawn in grey on opaque black rather than in white with
+ * varying alpha. Without it, the crossed sheets of a fountain render as two
+ * solid white slabs standing in the garden, which is exactly what they did.
+ */
+export function plume(): THREE.CanvasTexture {
+  const w = 128;
+  const h = 128;
+  const [c, ctx] = canvas(w, h);
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, w, h);
+
+  const img = ctx.getImageData(0, 0, w, h);
+  for (let y = 0; y < h; y++) {
+    // v: 0 at the top of the sheet, 1 at the jet.
+    const v = y / (h - 1);
+    // Dense at the nozzle, falling away toward the crown of the plume.
+    const up = Math.pow(v, 1.5);
+    for (let x = 0; x < w; x++) {
+      const u = x / (w - 1);
+      // The plume widens as it falls, so the waist is narrow at the top.
+      const spread = 0.22 + (1 - v) * 0.5;
+      const across = Math.max(0, 1 - Math.abs(u - 0.5) / spread);
+      const value = 255 * up * across ** 1.7 * (0.75 + fbm(u, v, 7, 3, 53) * 0.5);
+      const i = (y * w + x) * 4;
+      img.data[i] = value;
+      img.data[i + 1] = value;
+      img.data[i + 2] = value;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  return toTexture(c, false);
 }

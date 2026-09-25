@@ -19,6 +19,7 @@ import {
   nameplate,
   pageFace,
   paving,
+  plume,
   relief,
   sandstone,
   shaft,
@@ -182,6 +183,8 @@ export interface CampusMaterials {
   /** Foliage, and the clipped hedges. */
   foliage: THREE.MeshStandardMaterial;
   bark: THREE.MeshStandardMaterial;
+  /** The guard at the gate. Delhi police khaki. */
+  khaki: THREE.MeshStandardMaterial;
   /** Water in the fountains and the channel. */
   water: THREE.MeshStandardMaterial;
   /** The plume of a fountain jet, and the spray. Additive, unlit. */
@@ -306,6 +309,7 @@ export function campusMaterials(): CampusMaterials {
       flatShading: true,
     }),
     bark: new THREE.MeshStandardMaterial({ color: '#4a3a2c', roughness: 0.96 }),
+    khaki: new THREE.MeshStandardMaterial({ color: '#8a7b55', roughness: 0.9 }),
     water: new THREE.MeshStandardMaterial({
       color: '#2f5a6b',
       roughness: 0.08,
@@ -316,8 +320,9 @@ export function campusMaterials(): CampusMaterials {
     }),
     spray: new THREE.MeshBasicMaterial({
       color: '#dceaf0',
+      alphaMap: plume(),
       transparent: true,
-      opacity: 0.3,
+      opacity: 0.55,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
       side: THREE.DoubleSide,

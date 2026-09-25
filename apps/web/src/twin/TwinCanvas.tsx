@@ -28,6 +28,7 @@ import { Floor } from './scene/Floor';
 import { Gallery } from './scene/Gallery';
 import { Library } from './scene/Library';
 import { Lights } from './scene/Lights';
+import { Campus } from './scene/campus/Campus';
 import { Memorial } from './scene/Memorial';
 import { Shadows } from './scene/Shadows';
 import { Toran } from './scene/Toran';
@@ -220,6 +221,7 @@ function Scene({
 
       <group ref={exterior}>
         <Memorial />
+        <Campus />
         <Toran />
       </group>
 

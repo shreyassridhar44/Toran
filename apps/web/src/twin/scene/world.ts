@@ -348,3 +348,75 @@ export function mergeRaw(geometries: THREE.BufferGeometry[]): THREE.BufferGeomet
   merged.computeBoundingSphere();
   return merged;
 }
+
+/**
+ * An Asiatic lion, seated, facing +z.
+ *
+ * Four of these back to back are the Lion Capital on the Ashoka pillar, and a
+ * single one sits on the coping of the compound wall beside the gate. It is
+ * the most recognisable object on the site and also the furthest from the
+ * camera for most of the arrival, so it is built for silhouette: the heavy
+ * mane, the upright chest and the forelegs planted straight down are what
+ * identify it at fifty metres. Anything finer than that would not survive the
+ * distance and would cost the same as the gate.
+ */
+export function lion(): THREE.BufferGeometry {
+  const parts: THREE.BufferGeometry[] = [];
+  const add = (g: THREE.BufferGeometry, x: number, y: number, z: number, rx = 0) => {
+    if (rx !== 0) g.rotateX(rx);
+    g.translate(x, y, z);
+    parts.push(g);
+  };
+
+  // Haunches and back, sloping down and away behind the chest.
+  const body = new THREE.SphereGeometry(0.44, 10, 8);
+  body.scale(1, 0.92, 1.35);
+  add(body, 0, 0.44, -0.42);
+
+  // Chest, upright and broad. This is what reads first.
+  const chest = new THREE.CylinderGeometry(0.34, 0.44, 0.78, 10);
+  add(chest, 0, 0.56, 0.06);
+
+  // Mane, wider than the head and carrying the profile. Kept tight to the
+  // skull: a larger one merged with its neighbours on the capital, where four
+  // of these sit shoulder to shoulder.
+  const mane = new THREE.SphereGeometry(0.36, 10, 8);
+  mane.scale(1.12, 1.04, 0.86);
+  add(mane, 0, 1.06, 0.04);
+
+  // Muzzle, and the head inside the mane.
+  const head = new THREE.SphereGeometry(0.27, 8, 6);
+  head.scale(1, 0.94, 1.1);
+  add(head, 0, 1.08, 0.24);
+  const muzzle = new THREE.SphereGeometry(0.15, 8, 6);
+  muzzle.scale(1, 0.82, 1.2);
+  add(muzzle, 0, 1.0, 0.44);
+
+  // Ears.
+  for (const side of [-1, 1]) {
+    const ear = new THREE.SphereGeometry(0.07, 6, 5);
+    add(ear, side * 0.22, 1.32, 0.1);
+  }
+
+  // Forelegs, planted straight down, and the paws.
+  for (const side of [-1, 1]) {
+    add(new THREE.CylinderGeometry(0.1, 0.12, 0.62, 8), side * 0.21, 0.31, 0.34);
+    const paw = new THREE.SphereGeometry(0.14, 8, 6);
+    paw.scale(1, 0.62, 1.3);
+    add(paw, side * 0.21, 0.08, 0.42);
+  }
+
+  // Rear paws, tucked under the haunches.
+  for (const side of [-1, 1]) {
+    const paw = new THREE.SphereGeometry(0.15, 8, 6);
+    paw.scale(1, 0.55, 1.25);
+    add(paw, side * 0.3, 0.09, -0.5);
+  }
+
+  // Tail, curled along the flank.
+  const tail = new THREE.TorusGeometry(0.2, 0.05, 6, 12, Math.PI * 1.1);
+  tail.rotateY(Math.PI / 2);
+  add(tail, 0.3, 0.5, -0.86);
+
+  return mergeRaw(parts);
+}

@@ -375,15 +375,14 @@ export function Memorial() {
       <mesh geometry={g.pages} material={m.page} />
 
       {/*
-        Provisional ground, so the memorial stands on something rather than
-        floating in the void. The plaza, its rings, the lawns and the road
-        replace this with the real thing. Run out well past the compound so its
-        edge never appears as a horizon line behind the building; the haze
-        closes the distance long before the geometry runs out.
+        The ground the campus does not cover: everything beyond the compound
+        wall, out to where the haze closes the distance. Inside the wall it is
+        hidden under the park's lawn and the plaza. The road, the footpaths and
+        the neighbourhood are drawn on top of it.
       */}
       <mesh
         rotation={[-Math.PI / 2, 0, 0]}
-        position={[0, -0.02, 0]}
+        position={[0, -0.06, 0]}
         material={m.concrete}
       >
         <planeGeometry args={[COMPOUND.halfWidth * 14, COMPOUND.halfWidth * 14]} />
