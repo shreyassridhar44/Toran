@@ -23,9 +23,18 @@ export interface Shot {
 
 export const ENTRY_DURATION_MS = 3600;
 
+/**
+ * Provisional. The memorial and its grounds are far larger than the forecourt
+ * these keyframes used to cross, so the flight now starts high over the road
+ * and comes down the approach to the arch. It is still three beats in 3.6
+ * seconds, which is brisk for the distance; the six-beat arrival — bird's eye,
+ * the gate, the guard, the pillar sweeping past, the building filling the
+ * frame — arrives with the campus it needs to fly through.
+ */
 export const ENTRY: readonly Shot[] = [
-  { position: [0, 1.7, 36], target: [0, 9.6, 17] },
-  { position: [0, 3.1, 21.6], target: [0, 5.2, 0] },
+  { position: [0, 54, 168], target: [0, 15, 8] },
+  { position: [0, 21, 96], target: [0, 13, 4] },
+  { position: [0, 7, 42], target: [0, 8, 0] },
   { position: [0, 2.5, 9.0], target: [0, 3.6, -26] },
 ];
 

@@ -17,6 +17,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { CameraRig } from './camera/CameraRig';
 import { ENTRY } from './camera/director';
+import { zoneAt } from './campus';
 import { fixtureHealth } from '@/fleet/devices';
 import { hallMaterials } from './materials';
 import { QualityContext, type Tier } from './quality';
@@ -27,6 +28,7 @@ import { Floor } from './scene/Floor';
 import { Gallery } from './scene/Gallery';
 import { Library } from './scene/Library';
 import { Lights } from './scene/Lights';
+import { Memorial } from './scene/Memorial';
 import { Shadows } from './scene/Shadows';
 import { Toran } from './scene/Toran';
 import { recordTiming, telemetry } from './telemetry';
@@ -112,6 +114,34 @@ function Probe({ tier }: { tier: Tier }) {
   return null;
 }
 
+/**
+ * Only ever one half of the model is on screen, so only one half is drawn.
+ *
+ * The campus is a large model — a building eighty metres across, its grounds, a
+ * road and a neighbourhood — and the hall inside it is another. Both at once
+ * would not fit the frame budget, and there is no viewpoint from which both are
+ * visible: the boundary is the plane of the entrance arch, which the arrival
+ * flight crosses exactly once.
+ *
+ * Visibility is set on the group rather than through React state, because this
+ * runs every frame and a re-render per frame during the flight is precisely
+ * what the entry cannot afford.
+ */
+function ZoneCull({
+  exterior,
+  interior,
+}: {
+  exterior: React.RefObject<THREE.Group | null>;
+  interior: React.RefObject<THREE.Group | null>;
+}) {
+  useFrame(({ camera }) => {
+    const outside = zoneAt(camera.position.z) === 'campus';
+    if (exterior.current !== null) exterior.current.visible = outside;
+    if (interior.current !== null) interior.current.visible = !outside;
+  });
+  return null;
+}
+
 function Scene({
   tier,
   replayToken,
@@ -122,10 +152,20 @@ function Scene({
   skipEntry: boolean;
 }) {
   const health = useMemo(() => fixtureHealth(), []);
+  const exterior = useRef<THREE.Group>(null);
+  const interior = useRef<THREE.Group>(null);
   return (
     <>
       <color attach="background" args={['#0b0a09']} />
-      <fogExp2 attach="fog" args={['#141210', 0.012]} />
+      {/*
+        Thinner than the hall's original 0.012, which at a hundred and seventy
+        metres — where the arrival now begins — left the memorial a grey smudge.
+        Delhi haze is real and the building should sit in some of it, but at
+        0.0042 the establishing shot was still losing two fifths of its
+        contrast. The interior and the exterior get their own atmosphere in the
+        lighting pass; this is one figure serving both.
+      */}
+      <fogExp2 attach="fog" args={['#c3bcac', 0.0022]} />
       {/*
         Image based fill, built from light panels and rendered once. Metals
         with no environment to reflect render close to black, so without this
@@ -177,14 +217,23 @@ function Scene({
         />
       </Environment>
       <Lights />
-      <Architecture />
-      <Toran />
-      <Floor />
-      <Library />
-      <Gallery />
-      <Shadows />
-      <Devices health={health} />
-      <Atmosphere />
+
+      <group ref={exterior}>
+        <Memorial />
+        <Toran />
+      </group>
+
+      <group ref={interior}>
+        <Architecture />
+        <Floor />
+        <Library />
+        <Gallery />
+        <Shadows />
+        <Devices health={health} />
+        <Atmosphere />
+      </group>
+
+      <ZoneCull exterior={exterior} interior={interior} />
       <CameraRig replayToken={replayToken} skipEntry={skipEntry} />
       <TransitionDirector tier={tier} />
       <Probe tier={tier} />

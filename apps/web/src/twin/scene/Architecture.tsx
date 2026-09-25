@@ -70,44 +70,22 @@ export function Architecture() {
     const carved: Part[] = [];
     const dark: Part[] = [];
 
-    // Facade: two blocks and a lintel around the doorway, with jamb pilasters,
-    // a carved frieze and a cornice.
+    // The front of the hall is now the memorial's rotunda: the drum encloses
+    // this end of the nave and its recessed portal is the doorway. The carved
+    // temple facade that used to stand at HALL.front is gone with it — it was
+    // seventeen metres of elevation in front of a building that has its own.
+    // A short return wall either side of the opening is all that is left, and
+    // it is hidden inside the drum. Memorial.tsx owns what a visitor sees.
     const dw = HALL.doorHalfWidth;
-    const fw = 17;
-    const side = fw - dw;
-    plain.push({
-      geometry: box(side, 15, 1.2),
-      position: [-(dw + side / 2), 7.5, HALL.front],
-    });
-    plain.push({
-      geometry: box(side, 15, 1.2),
-      position: [dw + side / 2, 7.5, HALL.front],
-    });
-    plain.push({
-      geometry: box(dw * 2, 15 - HALL.doorHeight, 1.2),
-      position: [0, (15 + HALL.doorHeight) / 2, HALL.front],
-    });
     for (const sx of [-1, 1]) {
       plain.push({
-        geometry: box(0.9, 9.4, 1.7),
-        position: [sx * (dw + 0.45), 4.7, HALL.front + 0.1],
-      });
-      plain.push({
-        geometry: box(1.4, 15, 1.5),
-        position: [sx * (fw - 0.7), 7.5, HALL.front + 0.1],
+        geometry: box(W - dw, H, 0.8),
+        position: [sx * (dw + (W - dw) / 2), H / 2, HALL.front - 2.4],
       });
     }
-    carved.push({
-      geometry: box(fw * 2, 1.1, 0.22),
-      position: [0, 13.2, HALL.front + 0.7],
-    });
     plain.push({
-      geometry: box(fw * 2 + 1, 0.55, 1.9),
-      position: [0, 15.25, HALL.front + 0.2],
-    });
-    carved.push({
-      geometry: box(dw * 2 + 1.8, 0.7, 0.3),
-      position: [0, HALL.doorHeight + 0.35, HALL.front + 0.75],
+      geometry: box(dw * 2, H - HALL.doorHeight, 0.8),
+      position: [0, (H + HALL.doorHeight) / 2, HALL.front - 2.4],
     });
 
     // Nave walls, back wall and ceiling slab.
@@ -218,17 +196,12 @@ export function Architecture() {
       <mesh geometry={windows} material={m.window} />
       <mesh geometry={inlay} material={m.inlay} />
 
-      {/* Forecourt, and the paved path from the gate to the door. */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 45]} material={m.ground}>
-        <planeGeometry args={[160, 64]} />
-      </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 30]} material={m.floor}>
-        <planeGeometry args={[9, 34]} />
-      </mesh>
-
-      <mesh material={m.sky} renderOrder={-1}>
-        <sphereGeometry args={[220, 32, 16]} />
-      </mesh>
+      {/*
+        The forecourt, its paved path and the dusk sky sphere are gone. The
+        ground outside is the memorial's campus now, and the sky over it is
+        daylight. Both belong to the exterior, which is culled the moment the
+        visitor is in here anyway.
+      */}
     </group>
   );
 }

@@ -3,20 +3,15 @@
  * Used to look at the hall, not to pass or fail it.
  */
 import puppeteer from 'puppeteer-core';
+import { chromePath, gpuFlags } from './lib/chrome.mjs';
 
 const BASE = process.env.BASE ?? 'http://127.0.0.1:4173';
 const tier = process.argv[2] ?? 'high';
-const GPU = [
-  '--no-sandbox',
-  '--use-angle=vulkan',
-  '--enable-gpu',
-  '--ignore-gpu-blocklist',
-];
 
 const browser = await puppeteer.launch({
-  executablePath: '/usr/bin/google-chrome',
+  executablePath: chromePath(),
   headless: 'new',
-  args: GPU,
+  args: gpuFlags(),
 });
 const page = await browser.newPage();
 await page.setViewport({ width: 1600, height: 900, deviceScaleFactor: 1 });
@@ -32,10 +27,12 @@ await page.waitForFunction(() => window.__toranTwin?.entryStart != null, {
   timeout: 60000,
 });
 const t0 = Date.now();
+// Through the arrival: the establishing shot over the road, the approach, and
+// the moment the memorial fills the frame before the camera reaches the arch.
 const shots = [
-  [150, 'a-forecourt'],
-  [1500, 'b-gate'],
-  [2700, 'c-threshold'],
+  [150, 'a-bird'],
+  [1400, 'b-approach'],
+  [2600, 'c-elevation'],
 ];
 for (const [at, name] of shots) {
   const wait = at - (Date.now() - t0);

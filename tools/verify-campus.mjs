@@ -60,7 +60,9 @@ for (let i = 0; i < bands.length; i++) {
     maxZ = Math.max(maxZ, z);
   }
 }
-const topY = last.y + WING.bandThickness / 2;
+// The top of the stack is the riser standing on the highest tread, not the
+// tread itself: each band's glazing climbs from its own tread to the next one in.
+const topY = last.y + WING.bandRise;
 
 check(
   'the wedge falls outward, so the building reads as an open book',
@@ -73,9 +75,14 @@ check(
   `${(maxX * 2).toFixed(1)} m`,
 );
 check(
-  'the top band dies into the spine rather than floating beside it',
-  last.ax < MEMORIAL.spineHalfWidth + 4,
-  `top band reaches x ${last.ax.toFixed(1)}, spine is ${MEMORIAL.spineHalfWidth}`,
+  'the top band hands over to the page face rather than floating',
+  Math.abs(last.ax - PAGE.outerX) < 2,
+  `top band at x ${last.ax.toFixed(1)}, page edge at x ${PAGE.outerX}`,
+);
+check(
+  'the stack leaves room for a page face worth seeing',
+  PAGE.outerX - PAGE.innerX > 8,
+  `${(PAGE.outerX - PAGE.innerX).toFixed(1)} m of page between spine and stack`,
 );
 check(
   'no band cuts through the spine',
@@ -92,6 +99,19 @@ check(
   maxZ <= MEMORIAL.archZ + 3,
   `front of the wings at z ${maxZ.toFixed(1)}, arch at z ${MEMORIAL.archZ}`,
 );
+// The front tip of the lowest band is the part of a wing that reaches furthest
+// forward, and the drum is what it has to stay behind. A wing that oversteps
+// here appears to sprout from the entrance.
+{
+  const tipX = first.ax * Math.sin(first.startAngle);
+  const tipZ = WING.centreZ + first.az * Math.cos(first.startAngle);
+  const drumZ = Math.sqrt(Math.max(0, MEMORIAL.rotundaRadius ** 2 - tipX ** 2));
+  check(
+    'the wings tuck in behind the face of the drum',
+    tipZ < drumZ,
+    `wing tip at z ${tipZ.toFixed(1)}, drum face at z ${drumZ.toFixed(1)} for x ${tipX.toFixed(1)}`,
+  );
+}
 check(
   'the wings stand on the plinth, front to back',
   maxZ < MEMORIAL.plinthFrontZ && minZ > MEMORIAL.plinthBackZ,
@@ -124,6 +144,23 @@ check(
   'the page is no taller than the spine that carries it',
   PAGE.innerY <= MEMORIAL.spineHeight,
   `${PAGE.innerY} m of ${MEMORIAL.spineHeight} m`,
+);
+check(
+  'the spine ridge starts above the interior, not through it',
+  MEMORIAL.spineBaseY >= 12,
+  `spine springs from ${MEMORIAL.spineBaseY} m`,
+);
+check(
+  'the drum and its dome make up the rotunda',
+  MEMORIAL.drumHeight + MEMORIAL.domeHeight > PAGE.innerY - 3 &&
+    MEMORIAL.drumHeight > MEMORIAL.archHeight + 2,
+  `drum ${MEMORIAL.drumHeight} m plus dome ${MEMORIAL.domeHeight} m`,
+);
+check(
+  'the portal gap is wide enough to hold the arch',
+  MEMORIAL.rotundaRadius * Math.sin(MEMORIAL.portalHalfAngle) >
+    MEMORIAL.archHalfWidth + 1.5,
+  `${(MEMORIAL.rotundaRadius * Math.sin(MEMORIAL.portalHalfAngle)).toFixed(1)} m half-width for a ${MEMORIAL.archHalfWidth} m arch`,
 );
 
 // ---- the approach, from the gate to the arch ----

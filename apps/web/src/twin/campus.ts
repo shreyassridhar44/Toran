@@ -43,15 +43,36 @@ export const MEMORIAL = {
   plinthBackZ: -48,
   plinthHalfWidth: 46,
 
-  /** The spine: the red sandstone mass between the two pages. */
-  spineHalfWidth: 5.4,
+  /**
+   * The spine: the red sandstone ridge between the two pages.
+   *
+   * It begins above the interior ceiling rather than at the plinth. Seen from
+   * outside and from the air it is a solid ridge; taken to the ground it would
+   * be a wall straight down the middle of the hall it is supposed to roof.
+   */
+  spineHalfWidth: 5.6,
+  spineBaseY: 12,
   spineBackZ: -44,
-  spineHeight: 21,
+  spineHeight: 19.4,
 
   /** The rotunda at the front of the spine, and the arch cut into it. */
   rotundaZ: 0,
-  rotundaRadius: 11.5,
-  rotundaHeight: 17.5,
+  rotundaRadius: 13,
+  /**
+   * Height of the drum before the dome starts, and the dome above it. They sum
+   * to the spine's height, so the drum finishes the ridge rather than being
+   * overtopped by it — at 12.5 and 5 the spine stood a clear three metres
+   * above the entrance and read as a chimney behind a pot.
+   */
+  drumHeight: 13.4,
+  domeHeight: 6.0,
+  /**
+   * Half-angle of the gap left in the drum for the entrance. The portal is a
+   * flat panel closing this gap, so its ends meet the drum exactly and its
+   * centre sits back inside the curve — which is the deep recess of the
+   * photographs.
+   */
+  portalHalfAngle: 0.52,
   archZ: 10,
   /** Matched to HALL.doorHalfWidth and HALL.doorHeight so the interior lines up. */
   archHalfWidth: 3.2,
@@ -89,28 +110,36 @@ export const MEMORIAL = {
  * Mirrored about x = 0 for the other wing, so only one is described.
  */
 export const WING = {
-  /** Centre of the arcs, at the middle of the building's length. */
-  centreZ: -16,
+  /**
+   * Centre of the arcs, behind the middle of the building's length.
+   *
+   * Set far enough back that the front tip of the lowest band falls behind the
+   * face of the drum. At −16 the wings reached a metre and a half past it and
+   * the stacks appeared to grow out of the entrance.
+   */
+  centreZ: -19,
 
   bands: 12,
   /** Vertical rise per band, and the height of the band itself. */
-  bandRise: 1.42,
+  bandRise: 1.25,
   bandThickness: 0.92,
   /** The glazing sits back behind the metal edge, which is what catches light. */
   edgeDepth: 0.34,
 
-  /** Semi-axis across x: the lowest band reaches furthest, the top band least. */
-  axOuter: 38,
-  axInner: 7.5,
-  /** Semi-axis along z. Nearly constant, so the wing runs the building's length. */
-  azOuter: 28,
-  azInner: 19,
-
   /**
-   * The band stops short of the spine by this much, so the stack dies into the
-   * sandstone rather than poking through it.
+   * Semi-axis across x: the lowest band reaches furthest, the top band least.
+   *
+   * The stack stops well short of the spine. Above `axInner` the slope is the
+   * cream page face, and that division is most of what makes the memorial read
+   * as an open book from the air rather than as two glass hillsides. Taking the
+   * bands all the way in left no page to see.
    */
-  spineClearance: 5.4,
+  axOuter: 38,
+  axInner: 20,
+  /** Semi-axis along z. Nearly constant, so the wing runs the building's length. */
+  azOuter: 26,
+  azInner: 22,
+
   /** How far round the back the arc runs, as a fraction of the half turn. */
   backSweep: 0.97,
 
@@ -127,13 +156,21 @@ export const WING = {
  */
 export const PAGE = {
   /** Height of the page's inner edge, where it meets the spine. */
-  innerY: 19.4,
-  /** Height of its outer edge, where it lands on the top band of the wing. */
-  outerY: 16.6,
-  innerX: 5.6,
-  outerX: 15.5,
-  frontZ: 6,
-  backZ: -38,
+  innerY: 19.0,
+  /**
+   * Height of its outer edge. Flush with the top of the louvre stack — the top
+   * band's tread plus the riser standing on it — so the paper lands exactly on
+   * the glass rather than hovering above it or sinking through.
+   */
+  outerY: MEMORIAL.plinthY + WING.bands * WING.bandRise,
+  /**
+   * The page spans from the spine out to where the stack ends. Its outline in
+   * plan follows the top band's arc rather than being a rectangle: the first
+   * version was a flat quad, and its square corners jutted out past the curved
+   * wings like two shelves.
+   */
+  innerX: MEMORIAL.spineHalfWidth,
+  outerX: WING.axInner,
   /** Pages bow very slightly, as the leaves of an open book do. */
   sag: 0.9,
 } as const;
@@ -150,10 +187,12 @@ export function wingBand(i: number): {
   const t = i / (WING.bands - 1);
   const ax = WING.axOuter + (WING.axInner - WING.axOuter) * t;
   const az = WING.azOuter + (WING.azInner - WING.azOuter) * t;
-  // Start where the arc first clears the spine. asin is undefined once the band
-  // is narrower than the spine itself, which the clamp handles by starting the
-  // band at its widest point.
-  const startAngle = Math.asin(Math.min(1, WING.spineClearance / ax));
+  // Start where the arc first clears the spine, so the band tucks in beside the
+  // sandstone instead of running through it. Taken from MEMORIAL rather than
+  // restated here: the two were separate constants once, and they drifted.
+  // asin is undefined if a band is ever narrower than the spine, which the
+  // clamp handles by starting that band at its widest point.
+  const startAngle = Math.asin(Math.min(1, MEMORIAL.spineHalfWidth / ax));
   return {
     y: MEMORIAL.plinthY + i * WING.bandRise,
     ax,

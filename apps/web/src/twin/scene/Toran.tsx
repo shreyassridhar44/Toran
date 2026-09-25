@@ -1,8 +1,13 @@
 'use client';
 
 /**
- * The Sanchi Stupa Toran, the main facade of the Dr. Ambedkar International
- * Centre and the gateway the camera passes through on entry.
+ * The Sanchi Stupa Toran, standing on the approach between the main gate and
+ * the ring plaza, and the gateway the camera passes through on entry.
+ *
+ * It used to be the facade of the building, seventeen metres in front of the
+ * door. The memorial has its own entrance — a recessed arch in a sandstone
+ * drum — so the gateway has moved out onto the campus, where a torana is what
+ * it has always been: a ceremonial threshold on the way in, not a wall.
  *
  * The anatomy follows the Sanchi gateways: two square posts, carved capitals,
  * three architraves that overshoot the posts and curl into volutes, uprights
@@ -20,7 +25,8 @@ import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeom
 import { box, mergeParts, Spiral, type Part } from '../geometry';
 import { hallMaterials } from '../materials';
 
-export const TORAN_Z = 17;
+/** On the approach, between the gate at z 110 and the plaza edge at z 86. */
+export const TORAN_Z = 96;
 
 const POST_X = 3.0;
 const ARCHITRAVES = [8.85, 10.25, 11.65];
