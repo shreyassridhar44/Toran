@@ -41,7 +41,8 @@ export const MEMORIAL = {
   plinthY: 2.0,
   plinthFrontZ: 20,
   plinthBackZ: -48,
-  plinthHalfWidth: 46,
+  /** Narrower than the stack above it, which overhangs it. */
+  plinthHalfWidth: 35,
 
   /**
    * The spine: the red sandstone ridge between the two pages.
@@ -50,10 +51,10 @@ export const MEMORIAL = {
    * outside and from the air it is a solid ridge; taken to the ground it would
    * be a wall straight down the middle of the hall it is supposed to roof.
    */
-  spineHalfWidth: 5.6,
+  spineHalfWidth: 4.2,
   spineBaseY: 12,
   spineBackZ: -44,
-  spineHeight: 19.4,
+  spineHeight: 23.4,
 
   /** The rotunda at the front of the spine, and the arch cut into it. */
   rotundaZ: 0,
@@ -64,8 +65,8 @@ export const MEMORIAL = {
    * overtopped by it — at 12.5 and 5 the spine stood a clear three metres
    * above the entrance and read as a chimney behind a pot.
    */
-  drumHeight: 13.4,
-  domeHeight: 6.0,
+  drumHeight: 15.0,
+  domeHeight: 8.4,
   /**
    * Half-angle of the gap left in the drum for the entrance. The portal is a
    * flat panel closing this gap, so its ends meet the drum exactly and its
@@ -88,24 +89,29 @@ export const MEMORIAL = {
 } as const;
 
 /**
- * One wing of the book: the stack of curved louvre bands that reads as the cut
- * edge of a thousand pages.
+ * One wing of the book: the stack of curved louvre bands that is the cut edge
+ * of a thousand fanned pages.
  *
- * The wing is a **wedge, highest against the spine and falling to the plinth at
- * its outer fore-edge.** That slope is the whole silhouette of the memorial, and
- * getting its direction right is the difference between the building in the
- * photographs and a pair of splayed ramps.
+ * Three things make it read as a book rather than as a glass hillside, and all
+ * three are visible in the photographs:
  *
- * Each band is an elliptical arc in plan, all of them about the same centre at
- * the middle of the building's length. Band i sits higher than band i-1 and
- * reaches **less far out**: `ax` runs from `axOuter` at the plinth down to
- * `axInner` at the top, where the stack meets the spine. `az` shrinks far less,
- * because the book is nearly as long at the spine as at the fore-edge; that
- * difference is what rounds the corners of the wing.
+ * 1. **The stack leans outward as it rises.** Each band reaches further out
+ *    than the one below, so the mass overhangs its own plinth — see the right
+ *    wing in image4, where the top band stands several metres proud of the
+ *    sandstone base it springs from. Built the other way, narrowing as it
+ *    climbs, the memorial becomes a pair of splayed ramps with a pot between
+ *    them.
+ * 2. **The stack is steep and shallow in plan.** It runs `axTop - axBase`
+ *    across while rising the full height of the building, so it is a wall, not
+ *    a slope. Everything inboard of it is page.
+ * 3. **The wing tapers along its length.** Higher bands sweep a shorter arc, so
+ *    the wing stands tall against the rotunda and dies away to nothing at its
+ *    far end — the profile of image4 from the road.
  *
- * Each band starts where it clears the spine and runs round to the back, so the
- * start angle is not a constant — it is derived per band from `ax`. Storing it
- * as a constant put the low bands through the middle of the rotunda.
+ * Each band is an elliptical arc in plan, all about one centre behind the
+ * middle of the building. Each starts where it clears the spine, so the start
+ * angle is derived per band from `ax` rather than stored: as a constant it put
+ * the low bands through the middle of the rotunda.
  *
  * Mirrored about x = 0 for the other wing, so only one is described.
  */
@@ -113,50 +119,64 @@ export const WING = {
   /**
    * Centre of the arcs, behind the middle of the building's length.
    *
-   * Set far enough back that the front tip of the lowest band falls behind the
-   * face of the drum. At −16 the wings reached a metre and a half past it and
-   * the stacks appeared to grow out of the entrance.
+   * Set far enough back that the front tip of every band falls behind the face
+   * of the drum. At −16 the wings reached a metre and a half past it and the
+   * stacks appeared to grow out of the entrance.
    */
   centreZ: -19,
 
   bands: 12,
   /** Vertical rise per band, and the height of the band itself. */
-  bandRise: 1.25,
+  bandRise: 1.0,
   bandThickness: 0.92,
   /** The glazing sits back behind the metal edge, which is what catches light. */
   edgeDepth: 0.34,
 
   /**
-   * Semi-axis across x: the lowest band reaches furthest, the top band least.
-   *
-   * The stack stops well short of the spine. Above `axInner` the slope is the
-   * cream page face, and that division is most of what makes the memorial read
-   * as an open book from the air rather than as two glass hillsides. Taking the
-   * bands all the way in left no page to see.
+   * Semi-axis across x. `axBase` is the lowest band, standing on the plinth;
+   * `axTop` is the highest, overhanging it by ten metres. The difference is
+   * the whole overhang, and it is what the eye reads as the fanned edge of a
+   * book rather than as a bank of seating.
    */
-  axOuter: 38,
-  axInner: 20,
-  /** Semi-axis along z. Nearly constant, so the wing runs the building's length. */
-  azOuter: 26,
-  azInner: 22,
+  axBase: 32,
+  axTop: 38,
+  /** Semi-axis along z, which leans out with it. */
+  azBase: 24,
+  azTop: 28,
 
-  /** How far round the back the arc runs, as a fraction of the half turn. */
+  /** How far round the back the lowest band runs, as a fraction of a half turn. */
   backSweep: 0.97,
+  /**
+   * Radians taken off the far end of the arc per band. This is the taper: the
+   * wing is full height where it meets the rotunda and falls away to the
+   * plinth at its fore-edge.
+   */
+  endTaper: 0.058,
 
-  /** Segments per arc. Twelve bands at 40 is 480 quads a wing; it reads smooth. */
-  segments: 40,
+  /**
+   * How square the plan is. 2 would be an ellipse, which gave a circular dish
+   * that read as a bathtub; a book has long straightish edges and tight
+   * corners. See superPoint in scene/world.
+   */
+  squareness: 2.9,
+
+  /** Segments per arc. Twelve bands at 48 is 576 quads a wing; it reads smooth. */
+  segments: 48,
 } as const;
 
 /**
- * The cream page face: the upper part of each wing's slope, nearest the spine,
- * where the memorial reads as an open book from the air.
+ * The cream page face: the great gently sloping top surface of each wing, and
+ * what the memorial actually is when seen from the air.
  *
- * It runs from the top of the spine down to the top band of the louvre stack.
- * Below that line the slope is glass and metal; above it, paper.
+ * It is the **dominant** surface, not a strip. It runs from the spine all the
+ * way out to the top of the louvre stack — better than four fifths of the half
+ * width — and falls only three metres over that distance, which is the shallow
+ * tilt of an open page in image15. Made narrow, with the stack taking most of
+ * the slope, the building stops being a book.
  */
 export const PAGE = {
   /** Height of the page's inner edge, where it meets the spine. */
-  innerY: 19.0,
+  innerY: 22.3,
   /**
    * Height of its outer edge. Flush with the top of the louvre stack — the top
    * band's tread plus the riser standing on it — so the paper lands exactly on
@@ -164,15 +184,17 @@ export const PAGE = {
    */
   outerY: MEMORIAL.plinthY + WING.bands * WING.bandRise,
   /**
-   * The page spans from the spine out to where the stack ends. Its outline in
-   * plan follows the top band's arc rather than being a rectangle: the first
-   * version was a flat quad, and its square corners jutted out past the curved
-   * wings like two shelves.
+   * From the spine to the outermost, highest band. In plan the inner edge is a
+   * straight line along the spine and the outer edge follows that band's arc,
+   * so the page fans the way the leaf of an open book does.
    */
   innerX: MEMORIAL.spineHalfWidth,
-  outerX: WING.axInner,
-  /** Pages bow very slightly, as the leaves of an open book do. */
-  sag: 0.9,
+  outerX: WING.axTop,
+  /**
+   * Pages bow very slightly, as the leaves of an open book do. Barely: at 0.9
+   * the two pages dished inward and the building read as a basin.
+   */
+  sag: 0.25,
 } as const;
 
 /** Where band `i` of a wing sits: its height and its two semi-axes. */
@@ -185,8 +207,9 @@ export function wingBand(i: number): {
 } {
   // 0 at the plinth, 1 at the top band.
   const t = i / (WING.bands - 1);
-  const ax = WING.axOuter + (WING.axInner - WING.axOuter) * t;
-  const az = WING.azOuter + (WING.azInner - WING.azOuter) * t;
+  // Outward as it rises: the overhang.
+  const ax = WING.axBase + (WING.axTop - WING.axBase) * t;
+  const az = WING.azBase + (WING.azTop - WING.azBase) * t;
   // Start where the arc first clears the spine, so the band tucks in beside the
   // sandstone instead of running through it. Taken from MEMORIAL rather than
   // restated here: the two were separate constants once, and they drifted.
@@ -198,7 +221,8 @@ export function wingBand(i: number): {
     ax,
     az,
     startAngle,
-    endAngle: Math.PI * WING.backSweep - startAngle,
+    // Each band stops short of the one below it, which is the taper.
+    endAngle: Math.PI * WING.backSweep - startAngle - i * WING.endTaper,
   };
 }
 

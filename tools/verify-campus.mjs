@@ -48,10 +48,12 @@ const last = bands[bands.length - 1];
 let maxX = 0;
 let minZ = Infinity;
 let maxZ = -Infinity;
-let widens = false;
+let narrows = false;
+let shortens = true;
 for (let i = 0; i < bands.length; i++) {
   const b = bands[i];
-  if (i > 0 && b.ax > bands[i - 1].ax + 1e-6) widens = true;
+  if (i > 0 && b.ax < bands[i - 1].ax - 1e-6) narrows = true;
+  if (i > 0 && b.endAngle >= bands[i - 1].endAngle) shortens = false;
   for (let s = 0; s <= WING.segments; s++) {
     const a = b.startAngle + (b.endAngle - b.startAngle) * (s / WING.segments);
     maxX = Math.max(maxX, b.ax * Math.sin(a));
@@ -65,9 +67,24 @@ for (let i = 0; i < bands.length; i++) {
 const topY = last.y + WING.bandRise;
 
 check(
-  'the wedge falls outward, so the building reads as an open book',
-  !widens && last.ax < first.ax,
-  `${first.ax.toFixed(1)} m at the plinth down to ${last.ax.toFixed(1)} m at the spine`,
+  'the stack leans outward as it rises, overhanging its plinth',
+  !narrows && last.ax > first.ax,
+  `${first.ax.toFixed(1)} m at the plinth out to ${last.ax.toFixed(1)} m at the top`,
+);
+check(
+  'the stack overhangs the plinth it stands on',
+  first.ax <= MEMORIAL.plinthHalfWidth && last.ax > MEMORIAL.plinthHalfWidth,
+  `base ${first.ax.toFixed(1)} m on a ${MEMORIAL.plinthHalfWidth} m plinth, top ${last.ax.toFixed(1)} m`,
+);
+check(
+  'the wing tapers along its length, tall at the rotunda and dying at its end',
+  shortens,
+  `arc ${first.endAngle.toFixed(2)} rad at the plinth, ${last.endAngle.toFixed(2)} at the top`,
+);
+check(
+  'the stack is a wall, not a hillside: it rises faster than it spreads',
+  WING.bands * WING.bandRise > last.ax - first.ax,
+  `${(WING.bands * WING.bandRise).toFixed(1)} m up over ${(last.ax - first.ax).toFixed(1)} m out`,
 );
 check(
   'the memorial is about eighty metres across',
@@ -79,10 +96,18 @@ check(
   Math.abs(last.ax - PAGE.outerX) < 2,
   `top band at x ${last.ax.toFixed(1)}, page edge at x ${PAGE.outerX}`,
 );
+// The page is the memorial seen from the air, and image15 is most of the brief.
+// It has to dominate: a narrow strip of paper on a broad bank of glass is a
+// grandstand, not a book.
 check(
-  'the stack leaves room for a page face worth seeing',
-  PAGE.outerX - PAGE.innerX > 8,
-  `${(PAGE.outerX - PAGE.innerX).toFixed(1)} m of page between spine and stack`,
+  'the page is the dominant surface, not a strip on top of the stack',
+  PAGE.outerX - PAGE.innerX > (last.ax - first.ax) * 2,
+  `${(PAGE.outerX - PAGE.innerX).toFixed(1)} m of page against ${(last.ax - first.ax).toFixed(1)} m of stack`,
+);
+check(
+  'the page lies nearly flat, as an open page does',
+  (PAGE.innerY - PAGE.outerY) / (PAGE.outerX - PAGE.innerX) < 0.25,
+  `${(PAGE.innerY - PAGE.outerY).toFixed(1)} m of fall over ${(PAGE.outerX - PAGE.innerX).toFixed(1)} m`,
 );
 check(
   'no band cuts through the spine',
@@ -117,11 +142,7 @@ check(
   maxZ < MEMORIAL.plinthFrontZ && minZ > MEMORIAL.plinthBackZ,
   `z ${maxZ.toFixed(1)} to ${minZ.toFixed(1)}, plinth ${MEMORIAL.plinthFrontZ} to ${MEMORIAL.plinthBackZ}`,
 );
-check(
-  'the wings stand on the plinth across',
-  maxX < MEMORIAL.plinthHalfWidth,
-  `${maxX.toFixed(1)} m of ${MEMORIAL.plinthHalfWidth} m`,
-);
+
 
 // ---- the page faces sit on top of the stack, not through it ----
 console.log('\nThe page faces');

@@ -14,6 +14,42 @@ import * as THREE from 'three';
 import { box } from '../geometry';
 
 /**
+ * A point on a superellipse in the XZ plane, and its outward normal.
+ *
+ * `squareness` 2 is an ordinary ellipse. Higher values straighten the long
+ * edges and pull the corners tighter, toward a rounded rectangle.
+ *
+ * The memorial needs this. Its wings curve strongly in plan — image3 shows a
+ * facade that is all curve — but the footprint of an open book has long
+ * straightish edges, and a pure ellipse gave a circular dish that read as a
+ * bathtub rather than as a book.
+ */
+export function superPoint(
+  ax: number,
+  az: number,
+  angle: number,
+  squareness = 2,
+): { x: number; z: number; nx: number; nz: number } {
+  const sa = Math.sin(angle);
+  const ca = Math.cos(angle);
+  const p = 2 / squareness;
+  const sgn = (v: number) => (v < 0 ? -1 : 1);
+
+  const ux = sgn(sa) * Math.abs(sa) ** p;
+  const uz = sgn(ca) * Math.abs(ca) ** p;
+  const x = ax * ux;
+  const z = az * uz;
+
+  // Gradient of |x/ax|^n + |z/az|^n, which is the outward normal. For an
+  // ellipse this reduces to (x/ax^2, z/az^2) — the radius vector scaled by the
+  // reciprocal of each semi-axis, not the radius vector itself.
+  const n = squareness;
+  const nx = (sgn(x) * Math.abs(ux) ** (n - 1)) / ax;
+  const nz = (sgn(z) * Math.abs(uz) ** (n - 1)) / az;
+  return { x, z, nx, nz };
+}
+
+/**
  * A rectangular section swept along an elliptical arc in the XZ plane.
  *
  * This is the workhorse of the exterior. The louvre bands of the wings, the
@@ -42,6 +78,8 @@ export function arcBand(options: {
   centreX?: number;
   /** Mirror across x = 0, for the other wing. */
   mirror?: boolean;
+  /** 2 is an ellipse; higher straightens the long edges. See superPoint. */
+  squareness?: number;
 }): THREE.BufferGeometry {
   const {
     ax,
@@ -55,6 +93,7 @@ export function arcBand(options: {
     centreZ = 0,
     centreX = 0,
     mirror = false,
+    squareness = 2,
   } = options;
 
   const positions: number[] = [];
@@ -69,16 +108,12 @@ export function arcBand(options: {
   for (let i = 0; i <= segments; i++) {
     const t = i / segments;
     const a = startAngle + (endAngle - startAngle) * t;
-    const ca = Math.cos(a);
-    const sa = Math.sin(a);
+    const s = superPoint(ax, az, a, squareness);
 
-    // Point on the arc, and the outward normal of the ellipse there. The
-    // normal of an ellipse is not the radius vector: it is scaled by the
-    // reciprocal of each semi-axis, which matters once ax and az differ much.
-    const px = centreX + sx * ax * sa;
-    const pz = centreZ + az * ca;
-    const nx = sx * (sa / ax);
-    const nz = ca / az;
+    const px = centreX + sx * s.x;
+    const pz = centreZ + s.z;
+    const nx = sx * s.nx;
+    const nz = s.nz;
     const nl = Math.hypot(nx, nz) || 1;
     const ox = (nx / nl) * halfW;
     const oz = (nz / nl) * halfW;

@@ -32,9 +32,12 @@ export const ENTRY_DURATION_MS = 3600;
  * frame — arrives with the campus it needs to fly through.
  */
 export const ENTRY: readonly Shot[] = [
-  { position: [0, 54, 168], target: [0, 15, 8] },
-  { position: [0, 21, 96], target: [0, 13, 4] },
-  { position: [0, 7, 42], target: [0, 8, 0] },
+  // High and steep, so the book reads as a book. The first version looked in
+  // from 54 m at a shallow angle, and the two pages foreshortened into one flat
+  // oval; the open-book plan only exists when you are looking down on it.
+  { position: [0, 96, 126], target: [0, 10, -6] },
+  { position: [0, 44, 96], target: [0, 12, 0] },
+  { position: [0, 13, 52], target: [0, 10, 0] },
   { position: [0, 2.5, 9.0], target: [0, 3.6, -26] },
 ];
 
