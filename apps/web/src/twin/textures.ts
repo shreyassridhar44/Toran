@@ -715,3 +715,358 @@ export async function fontsReady(): Promise<void> {
     document.fonts.load(`400 24px ${FONT_INDIC}`, 'स्वागत'),
   ]);
 }
+
+// ---------- the campus ----------
+
+/**
+ * Coursed ashlar, for the compound wall and the sandstone of the spine.
+ *
+ * The same red as `sandstone`, but with the horizontal joints and the broken
+ * vertical joints of laid masonry. The memorial's walls are unmistakably built
+ * of blocks rather than cast, and at the distance the arrival flight passes
+ * them the coursing is the only thing that says so.
+ */
+export function ashlar(size = 512): {
+  map: THREE.CanvasTexture;
+  roughness: THREE.CanvasTexture;
+} {
+  const [c, ctx] = canvas(size, size);
+  const [rc, rctx] = canvas(size, size);
+
+  // Four courses per tile, each offset half a block from the one below, which
+  // is how the joints break in the photographs.
+  const courses = 4;
+  const blocksPerCourse = 3;
+  const courseH = size / courses;
+  const blockW = size / blocksPerCourse;
+
+  const img = ctx.createImageData(size, size);
+  const rough = rctx.createImageData(size, size);
+  const base = [156, 88, 66];
+
+  for (let y = 0; y < size; y++) {
+    const course = Math.floor(y / courseH);
+    const offset = (course % 2) * (blockW / 2);
+    for (let x = 0; x < size; x++) {
+      const u = x / size;
+      const v = y / size;
+
+      const inCourse = y - course * courseH;
+      const shifted = (x + offset) % size;
+      const inBlock = shifted % blockW;
+
+      // Joints are recessed, so they read darker and rougher.
+      const joint =
+        inCourse < 3 || inCourse > courseH - 3 || inBlock < 3 || inBlock > blockW - 3;
+
+      // Each block gets its own tone, so a wall is not one flat colour.
+      const blockId = course * 31 + Math.floor(shifted / blockW) * 7;
+      const tone = 0.93 + hash(blockId, course, 13) * 0.16;
+
+      const grain = fbm(u, v, 10, 4, 5);
+      const k = (joint ? 0.62 : tone) * (0.82 + grain * 0.3);
+
+      const i = (y * size + x) * 4;
+      img.data[i] = Math.min(255, base[0]! * k);
+      img.data[i + 1] = Math.min(255, base[1]! * k * (0.96 + grain * 0.08));
+      img.data[i + 2] = Math.min(255, base[2]! * k);
+      img.data[i + 3] = 255;
+
+      const r = joint ? 240 : 165 + (grain - 0.5) * 110;
+      rough.data[i] = r;
+      rough.data[i + 1] = r;
+      rough.data[i + 2] = r;
+      rough.data[i + 3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  rctx.putImageData(rough, 0, 0);
+  return { map: toTexture(c, true, true), roughness: toTexture(rc, false, true) };
+}
+
+/**
+ * Lawn. Delhi grass in the dry months is not English grass: yellower, patchier,
+ * and worn to dust where people walk. A flat green reads as a golf simulator.
+ */
+export function lawn(size = 256): THREE.CanvasTexture {
+  const [c, ctx] = canvas(size, size);
+  const img = ctx.createImageData(size, size);
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const u = x / size;
+      const v = y / size;
+      // Two scales: broad patches of wear, and the blade-level speckle that
+      // keeps a lawn from flattening out under a distant camera.
+      const patch = fbm(u, v, 4, 4, 61);
+      const blade = hash(x, y, 77);
+      const k = 0.72 + patch * 0.5 + blade * 0.14;
+      const i = (y * size + x) * 4;
+      img.data[i] = Math.min(255, 96 * k * (1.06 - patch * 0.14));
+      img.data[i + 1] = Math.min(255, 116 * k);
+      img.data[i + 2] = Math.min(255, 58 * k * (0.9 + patch * 0.2));
+      img.data[i + 3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  return toTexture(c, true, true);
+}
+
+/**
+ * Asphalt, with the dust every Delhi road carries at the kerb.
+ *
+ * Lane markings are geometry rather than baked in here, because the road is
+ * long and thin: a texture holding them would either repeat them every few
+ * metres or have to be enormous.
+ */
+export function asphalt(size = 256): THREE.CanvasTexture {
+  const [c, ctx] = canvas(size, size);
+  const img = ctx.createImageData(size, size);
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const u = x / size;
+      const v = y / size;
+      const aggregate = hash(x, y, 91);
+      const patch = fbm(u, v, 5, 3, 29);
+      const k = 0.78 + patch * 0.34 + (aggregate > 0.93 ? 0.22 : 0);
+      const i = (y * size + x) * 4;
+      // Warm grey, not neutral: dust settles on everything here.
+      img.data[i] = Math.min(255, 62 * k);
+      img.data[i + 1] = Math.min(255, 59 * k);
+      img.data[i + 2] = Math.min(255, 55 * k);
+      img.data[i + 3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  return toTexture(c, true, true);
+}
+
+/**
+ * The facade of a neighbouring block: rendered white, with windows, balcony
+ * openings and the stained band that every Delhi parapet grows.
+ *
+ * One texture stretched over a box is what makes forty buildings affordable.
+ * Modelled windows on the same forty would cost more than the memorial does.
+ */
+export function facade(size = 256): THREE.CanvasTexture {
+  const [c, ctx] = canvas(size, size);
+
+  ctx.fillStyle = '#d9d2c4';
+  ctx.fillRect(0, 0, size, size);
+
+  // Weathering: rain streaks below the parapet, grime at the base.
+  const grime = ctx.createLinearGradient(0, 0, 0, size);
+  grime.addColorStop(0, 'rgba(90,80,66,0.34)');
+  grime.addColorStop(0.16, 'rgba(90,80,66,0.06)');
+  grime.addColorStop(0.86, 'rgba(70,62,52,0.04)');
+  grime.addColorStop(1, 'rgba(58,50,42,0.3)');
+  ctx.fillStyle = grime;
+  ctx.fillRect(0, 0, size, size);
+
+  const storeys = 4;
+  const bays = 4;
+  const sh = size / storeys;
+  const bw = size / bays;
+  for (let s = 0; s < storeys; s++) {
+    for (let b = 0; b < bays; b++) {
+      const x = b * bw + bw * 0.22;
+      const y = s * sh + sh * 0.2;
+      const w = bw * 0.56;
+      const h = sh * 0.46;
+      // A lit window here and there, so the block is inhabited at dusk.
+      const lit = hash(b, s, 3) > 0.74;
+      ctx.fillStyle = lit ? '#e8c98c' : '#3c4048';
+      ctx.fillRect(x, y, w, h);
+      ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x, y, w, h);
+      ctx.fillStyle = 'rgba(160,150,136,0.7)';
+      ctx.fillRect(x - 2, y + h, w + 4, 3);
+    }
+    ctx.fillStyle = 'rgba(178,168,152,0.45)';
+    ctx.fillRect(0, (s + 1) * sh - 4, size, 4);
+  }
+
+  return toTexture(c, true, true);
+}
+
+/**
+ * The stone of the plaza paving, as grain only.
+ *
+ * The rings themselves are geometry — alternating annuli — because their edges
+ * have to stay crisp from a bird's-eye view, and a texture sharp enough to do
+ * that across a sixty metre plaza would eat the whole texture budget.
+ */
+export function paving(size = 256): {
+  map: THREE.CanvasTexture;
+  roughness: THREE.CanvasTexture;
+} {
+  const [c, ctx] = canvas(size, size);
+  const [rc, rctx] = canvas(size, size);
+  const img = ctx.createImageData(size, size);
+  const rough = rctx.createImageData(size, size);
+
+  const slab = size / 4;
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const u = x / size;
+      const v = y / size;
+      const slabId = Math.floor(x / slab) * 13 + Math.floor(y / slab) * 5;
+      const tone = 0.94 + hash(slabId, 2, 19) * 0.12;
+      const onJoint = x % slab < 2 || y % slab < 2;
+      const grain = fbm(u, v, 7, 3, 37);
+      const k = (onJoint ? 0.84 : tone) * (0.88 + grain * 0.22);
+      const i = (y * size + x) * 4;
+      // Near white. The ring colours come from the material, not from here.
+      img.data[i] = Math.min(255, 228 * k);
+      img.data[i + 1] = Math.min(255, 222 * k);
+      img.data[i + 2] = Math.min(255, 208 * k);
+      img.data[i + 3] = 255;
+      const r = onJoint ? 235 : 150 + (grain - 0.5) * 90;
+      rough.data[i] = r;
+      rough.data[i + 1] = r;
+      rough.data[i + 2] = r;
+      rough.data[i + 3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  rctx.putImageData(rough, 0, 0);
+  return { map: toTexture(c, true, true), roughness: toTexture(rc, false, true) };
+}
+
+/**
+ * The page of the open book: the Preamble, set as a printed page, for the two
+ * cream faces that are the roof of the memorial.
+ *
+ * Read from the air rather than at arm's length, so the text is set as ruled
+ * lines of type with only the opening words legible. Rendering the whole
+ * Preamble at a size nobody can read would cost a 2048 texture to say the same
+ * thing this says at 512.
+ */
+export function pageFace(size = 512): THREE.CanvasTexture {
+  const [c, ctx] = canvas(size, size);
+
+  ctx.fillStyle = '#ede5d6';
+  ctx.fillRect(0, 0, size, size);
+
+  // Paper, with the mottle of a printed leaf rather than a flat fill.
+  const img = ctx.getImageData(0, 0, size, size);
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const k = 0.95 + fbm(x / size, y / size, 6, 3, 83) * 0.1;
+      const i = (y * size + x) * 4;
+      img.data[i] = Math.min(255, img.data[i]! * k);
+      img.data[i + 1] = Math.min(255, img.data[i + 1]! * k);
+      img.data[i + 2] = Math.min(255, img.data[i + 2]! * k);
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+
+  const margin = size * 0.13;
+  const width = size - margin * 2;
+
+  ctx.fillStyle = '#4a4034';
+  ctx.textAlign = 'center';
+  ctx.font = `600 ${Math.round(size * 0.05)}px ${FONT_READ}`;
+  ctx.fillText('WE, THE PEOPLE OF INDIA', size / 2, margin + size * 0.06);
+
+  // The body, as ruled lines of type. Line lengths vary the way set text does,
+  // and the last line of each paragraph is short.
+  ctx.fillStyle = 'rgba(74,64,52,0.55)';
+  let y = margin + size * 0.12;
+  const leading = size * 0.026;
+  for (let line = 0; line < 26; line++) {
+    const last = line % 7 === 6;
+    const w = last ? width * (0.3 + hash(line, 1, 7) * 0.25) : width * 0.97;
+    ctx.fillRect(margin, y, w, Math.max(1, size * 0.0055));
+    y += leading;
+    if (last) y += leading * 0.5;
+  }
+
+  // The enacting line, which is the one other thing an eye picks out.
+  ctx.fillStyle = '#4a4034';
+  ctx.font = `600 ${Math.round(size * 0.032)}px ${FONT_READ}`;
+  ctx.fillText('HEREBY ADOPT, ENACT AND GIVE TO OURSELVES', size / 2, y + size * 0.05);
+  ctx.fillText('THIS CONSTITUTION', size / 2, y + size * 0.09);
+
+  return toTexture(c, true);
+}
+
+/**
+ * The memorial's name in raised gold letters, for the wall beside the gate.
+ *
+ * Drawn with the Devanagari line above the Latin, as it is on the wall. The
+ * letters carry a highlight above and a shadow below so they read as standing
+ * proud of the stone rather than painted on it.
+ */
+export function nameplate(width = 1024, height = 256): THREE.CanvasTexture {
+  const [c, ctx] = canvas(width, height);
+
+  // Transparent ground: this goes on the wall as a decal, so the stone shows.
+  ctx.clearRect(0, 0, width, height);
+  ctx.textAlign = 'center';
+
+  const gold = '#c89b52';
+  const line = (text: string, y: number, px: number, font: string, spacing = 0): void => {
+    ctx.font = `600 ${px}px ${font}`;
+    if (spacing > 0) {
+      // Canvas has no tracking, so letters are placed one at a time. The name
+      // on the wall is set very wide and it is most of its character.
+      const chars = [...text];
+      const widths = chars.map((ch) => ctx.measureText(ch).width + spacing);
+      const total = widths.reduce((a, b) => a + b, 0) - spacing;
+      let x = (width - total) / 2;
+      chars.forEach((ch, i) => {
+        ctx.fillStyle = 'rgba(0,0,0,0.45)';
+        ctx.fillText(ch, x + widths[i]! / 2 + 2, y + 3);
+        ctx.fillStyle = gold;
+        ctx.fillText(ch, x + widths[i]! / 2, y);
+        x += widths[i]!;
+      });
+      return;
+    }
+    ctx.fillStyle = 'rgba(0,0,0,0.45)';
+    ctx.fillText(text, width / 2 + 2, y + 3);
+    ctx.fillStyle = gold;
+    ctx.fillText(text, width / 2, y);
+  };
+
+  line('डॉ॰ अम्बेडकर राष्ट्रीय स्मारक', 62, 40, FONT_INDIC);
+  line('DR. AMBEDKAR NATIONAL MEMORIAL', 136, 54, FONT_UI, 6);
+  line('26 ALIPUR ROAD, DELHI', 186, 26, FONT_UI, 4);
+
+  // The two notice panels, white on the stone, as on the wall.
+  ctx.fillStyle = 'rgba(244,239,230,0.92)';
+  ctx.fillRect(width * 0.3, 208, width * 0.18, 34);
+  ctx.fillRect(width * 0.52, 208, width * 0.18, 34);
+  ctx.fillStyle = '#1a1714';
+  ctx.font = `500 16px ${FONT_UI}`;
+  ctx.fillText('MONDAY CLOSED', width * 0.39, 230);
+  ctx.fillText('ENTRY FREE', width * 0.61, 230);
+
+  return toTexture(c, true);
+}
+
+/**
+ * Daylight sky over the campus: the pale, hazy, slightly brown sky of Delhi
+ * rather than a clear blue one.
+ *
+ * `sky` above is the dusk gradient the old forecourt used and the interior
+ * still wants. The arrival flight opens on the campus in daylight, and a deep
+ * blue overhead would make the red sandstone read as a postcard. The haze is
+ * the point: it is what puts the neighbouring blocks in the distance.
+ */
+export function daysky(): THREE.CanvasTexture {
+  // Mapped onto a sphere, so the horizon is the middle of the texture.
+  const [c, ctx] = canvas(8, 256);
+  const g = ctx.createLinearGradient(0, 0, 0, 256);
+  g.addColorStop(0, '#6f8ba8');
+  g.addColorStop(0.3, '#9db0c2');
+  g.addColorStop(0.44, '#c9cfcb');
+  g.addColorStop(0.5, '#ddd6c4');
+  g.addColorStop(0.56, '#cfc7b6');
+  g.addColorStop(0.74, '#8e8578');
+  g.addColorStop(1, '#5d564c');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, 8, 256);
+  return toTexture(c, true);
+}
