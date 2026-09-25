@@ -7,6 +7,19 @@ DECISIONS.md
 CLAUDE.md
 research/
 
+# Agent context and the visual enhancement brief. Local development only.
+AGENTS.md
+MEMORY.md
+docs/
+
+# Photographs of the real memorial, used as modelling reference. Not ours to
+# redistribute, and not needed to build.
+refs/
+
+# Credentials for pushing to the fork. Never, under any circumstances, pushed.
+.git-credentials
+.gitcredentials
+
 # Dependencies
 node_modules/
 
