@@ -195,12 +195,6 @@ export function Atrium() {
         decay={2}
         color="#ffdcae"
       />
-      {/*
-        And a floor-level fill. Without it the granite, the well and the
-        balustrade are all pure black and the statue floats in a void; image8 is
-        dark, but its floor still reflects.
-      */}
-      <hemisphereLight args={['#8299a4', '#26231f', 2.4]} />
     </group>
   );
 }

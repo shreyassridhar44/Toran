@@ -318,8 +318,8 @@ function Study() {
           this room. */}
       <pointLight
         position={[x, 1.75, z]}
-        intensity={26}
-        distance={11}
+        intensity={150}
+        distance={14}
         decay={2}
         color="#ffd9a0"
       />
@@ -436,7 +436,7 @@ function Banyan() {
         position={[s.x * 4, 7.4, z]}
         angle={0.7}
         penumbra={0.9}
-        intensity={190}
+        intensity={420}
         distance={18}
         decay={2}
         color="#cfe0b0"
@@ -453,6 +453,21 @@ function Vitrines() {
   const x = s.x * (WALL_X - 1.9);
   const length = s.fromZ - s.toZ;
   const cases = 4;
+
+  // A case is lit from inside, so the folio is the light source. Emissive
+  // rather than a lamp per case: two more lights would shade every fragment in
+  // a twenty-eight metre room to illuminate four glass boxes.
+  const lit = useMemo(
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: '#f4efe6',
+        emissive: new THREE.Color('#ffeccb'),
+        emissiveIntensity: 0.85,
+        roughness: 0.9,
+      }),
+    [],
+  );
+  useEffect(() => () => lit.dispose(), [lit]);
 
   const { frame, glass, folios } = useMemo(() => {
     const frame: Part[] = [];
@@ -486,20 +501,8 @@ function Vitrines() {
   return (
     <group>
       <mesh geometry={frame} material={m.ceiling} />
-      <mesh geometry={folios} material={m.paper} />
+      <mesh geometry={folios} material={lit} />
       <mesh geometry={glass} material={c.glazing} />
-      {/* One lamp per pair of cases: a vitrine is lit from inside, and that is
-          what makes a dark gallery legible. */}
-      {[0.3, 0.7].map((t) => (
-        <pointLight
-          key={t}
-          position={[x, 1.7, s.fromZ - length * t]}
-          intensity={22}
-          distance={9}
-          decay={2}
-          color="#ffe8c2"
-        />
-      ))}
     </group>
   );
 }

@@ -1,21 +1,23 @@
 /**
- * Step 4 verification. Runs the shipped build in Chrome on the real GPU.
+ * Twin verification. Runs the shipped build in Chrome on the real GPU: the
+ * arrival, the frame budgets, the device sheet, and the accessibility of the
+ * DOM around the canvas.
  *
- * The GPU here is an AMD Radeon 680M, an integrated laptop part. It is not the
- * tablet, and nothing this script measures is reported as the tablet's
- * number. The tablet is measured by opening the hall with ?perf on it.
+ * Whatever GPU it finds is an integrated laptop part, not the tablet, and
+ * nothing this script measures is reported as the tablet's number. The tablet
+ * is measured by opening the hall on it with ?perf.
+ *
+ * Frame timings on an integrated part move by a factor of two between runs on
+ * nothing but thermal state. **Read three runs before believing one.** More
+ * than one afternoon has gone into optimising a number that was noise.
  */
 import fs from 'node:fs';
 import puppeteer from 'puppeteer-core';
 import { ENTRY_DURATION_MS } from '../apps/web/src/twin/camera/director.ts';
+import { chromePath, gpuFlags } from './lib/chrome.mjs';
 
 const BASE = process.env.BASE ?? 'http://127.0.0.1:4173';
-const GPU = [
-  '--no-sandbox',
-  '--use-angle=vulkan',
-  '--enable-gpu',
-  '--ignore-gpu-blocklist',
-];
+
 const axeSource = fs.readFileSync('node_modules/axe-core/axe.min.js', 'utf8');
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -53,9 +55,9 @@ console.log('\nToran step 4 verification  (AMD Radeon 680M, not the tablet)\n');
 // ---- cold load and entry, each tier in a fresh browser so the cache is cold ----
 for (const tier of ['high', 'low']) {
   const browser = await puppeteer.launch({
-    executablePath: '/usr/bin/google-chrome',
+    executablePath: chromePath(),
     headless: 'new',
-    args: GPU,
+    args: gpuFlags(),
   });
   const { page, errors, external } = await open(browser, `?quality=${tier}`);
   await page.waitForFunction(() => window.__toranTwin?.entryEnd != null, {
@@ -174,9 +176,9 @@ for (const tier of ['high', 'low']) {
 }
 
 const browser = await puppeteer.launch({
-  executablePath: '/usr/bin/google-chrome',
+  executablePath: chromePath(),
   headless: 'new',
-  args: GPU,
+  args: gpuFlags(),
 });
 
 // ---- reduced motion: instant cut ----

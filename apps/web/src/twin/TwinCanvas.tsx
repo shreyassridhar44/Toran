@@ -233,10 +233,16 @@ function Scene({
       <group ref={exterior}>
         <Memorial />
         <Campus />
+        {/*
+          The city, and the torana with it. Both are behind the camera by the
+          time it is on the steps, which is the one moment the threshold band
+          has both halves of the model drawn at once and the only place the
+          draw-call budget comes close.
+        */}
         <group ref={city}>
           <City />
+          <Toran />
         </group>
-        <Toran />
       </group>
 
       <group ref={interior}>
@@ -283,7 +289,9 @@ function Scene({
             intensity={0.85}
             radius={0.7}
           />
-          <Vignette offset={0.3} darkness={0.6} />
+          {/* Lighter than it was. A strong vignette over a dark interior loses
+              the exhibits along the walls, which is where all of them are. */}
+          <Vignette offset={0.34} darkness={0.42} />
           <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
         </EffectComposer>
       )}
