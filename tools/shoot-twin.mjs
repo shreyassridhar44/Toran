@@ -22,28 +22,42 @@ page.on('console', (m) => {
     errors.push(`[${m.type()}] ${m.text()}`);
 });
 
+// One frame per beat of the arrival, each captured with the flight held at
+// that moment rather than sampled while it runs. A screenshot of a moving
+// camera lands whenever the GPU gets round to it, which on this hardware is
+// most of a beat late; held, every frame is the pose the keyframes describe.
+const shots = [
+  [0, 'a-bird'],
+  [2310, 'b-descent'],
+  [3080, 'c-gate'],
+  [3600, 'd-torana'],
+  [4390, 'e-pillar'],
+  [5210, 'f-elevation'],
+  [6000, 'g-steps'],
+];
+for (const [at, name] of shots) {
+  await page.goto(`${BASE}/?quality=${tier}&perf&entry=${at}`, {
+    waitUntil: 'domcontentloaded',
+  });
+  await page.waitForFunction(() => window.__toranTwin?.entryEnd != null, {
+    timeout: 60000,
+  });
+  // A moment for the environment bake, the last shaders, and the loading
+  // scrim to finish fading. Caught too early the frame comes out dimmed by it.
+  await new Promise((r) => setTimeout(r, 2000));
+  await page.screenshot({ path: `tools/shots/twin-${tier}-${name}.png` });
+}
+
+// Then the flight itself, for the timings and the frame budget.
 await page.goto(`${BASE}/?quality=${tier}&perf`, { waitUntil: 'domcontentloaded' });
 await page.waitForFunction(() => window.__toranTwin?.entryStart != null, {
   timeout: 60000,
 });
-const t0 = Date.now();
-// Through the arrival: the establishing shot over the road, the approach, and
-// the moment the memorial fills the frame before the camera reaches the arch.
-const shots = [
-  [150, 'a-bird'],
-  [1400, 'b-approach'],
-  [2600, 'c-elevation'],
-];
-for (const [at, name] of shots) {
-  const wait = at - (Date.now() - t0);
-  if (wait > 0) await new Promise((r) => setTimeout(r, wait));
-  await page.screenshot({ path: `tools/shots/twin-${tier}-${name}.png` });
-}
 await page.waitForFunction(() => window.__toranTwin?.entryEnd != null, {
   timeout: 20000,
 });
 await new Promise((r) => setTimeout(r, 1500));
-await page.screenshot({ path: `tools/shots/twin-${tier}-d-nave.png` });
+await page.screenshot({ path: `tools/shots/twin-${tier}-h-nave.png` });
 const tele = await page.evaluate(() => window.__toranTwin);
 console.log(
   JSON.stringify(

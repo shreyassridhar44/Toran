@@ -200,11 +200,17 @@ function page(mirror: boolean): THREE.BufferGeometry {
     // The bow is greatest at the middle of the page's length and dies at both
     // ends, where the page is held by the rotunda and the back wall.
     const bow = Math.sin(t * Math.PI) * PAGE.sag;
+    // The front of the page tucks away under the rotunda's dome, rising to full
+    // height only once it is clear of it. Held flat at its spine height all the
+    // way forward, the inner corner stood almost two metres proud of the dome
+    // and put a dark spike through it on each side.
+    const tuck = Math.min(1, t / PAGE.tuck);
+    const inner = PAGE.outerY + (PAGE.innerY - PAGE.outerY) * tuck;
     for (let i = 0; i <= across; i++) {
       const u = i / across;
       const x = PAGE.innerX + (outerX - PAGE.innerX) * u;
       const z = innerZ + (outerZ - innerZ) * u;
-      const y = PAGE.innerY + (PAGE.outerY - PAGE.innerY) * u - bow * (1 - u * 0.4);
+      const y = inner + (PAGE.outerY - inner) * u - bow * (1 - u * 0.4);
       positions.push(sx * x, y, z);
       uvs.push(u, t);
     }

@@ -195,6 +195,15 @@ export const PAGE = {
    * the two pages dished inward and the building read as a basin.
    */
   sag: 0.25,
+  /**
+   * How much of the page's length is spent rising from the height of the stack
+   * to its full height at the spine.
+   *
+   * The front of a page passes under the dome of the rotunda. Held at full
+   * height the whole way forward, its inner corner stood nearly two metres
+   * proud of the dome and drove a dark spike through it on each side.
+   */
+  tuck: 0.32,
 } as const;
 
 /** Where band `i` of a wing sits: its height and its two semi-axes. */
@@ -410,4 +419,40 @@ export type Zone = 'campus' | 'inside';
 
 export function zoneAt(z: number): Zone {
   return z > MEMORIAL.archZ ? 'campus' : 'inside';
+}
+
+/**
+ * The band around the threshold where **both** halves are drawn.
+ *
+ * A hard switch at the arch is correct for everything except the one place it
+ * matters: standing on the steps looking in. From there the opening is most of
+ * the frame, the camera is still outside, and the interior is culled — so the
+ * climax of the arrival is a view through a doorway into the back of a hollow
+ * drum with daylight behind it.
+ *
+ * Inside this band nothing is culled, so the hall is already there to be seen
+ * through the arch and the exterior is still there to be seen back through it.
+ * It costs a few hundred milliseconds of drawing both models, once, at the end
+ * of the flight.
+ *
+ * `overlapIn` sits just **inside** where the flight comes to rest, at z = 9.
+ * Put any further in and the visitor stands in the band for the whole visit,
+ * drawing a campus behind a wall they are facing away from; put it level with
+ * the arch and the exterior vanishes the instant the camera crosses the plane,
+ * while the opening still fills the frame.
+ */
+export const THRESHOLD = { overlapIn: 9.3, overlapOut: 24 } as const;
+
+/**
+ * Where the city stops being drawn.
+ *
+ * Everything beyond the wall is behind the camera once it is on the approach,
+ * and it is dead weight exactly where the threshold band is already paying to
+ * draw both halves of the model. Dropping it there is what keeps that overlap
+ * inside the draw-call budget.
+ */
+export const CITY_FADES_AT = 26;
+
+export function drawsBothZones(z: number): boolean {
+  return z > THRESHOLD.overlapIn && z < THRESHOLD.overlapOut;
 }

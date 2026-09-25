@@ -102,7 +102,11 @@ export function Park() {
     const out: Placed[] = [];
     const r = PLAZA.outerRadius + 2.4;
     for (let i = 0; i < 16; i++) {
-      const a = (i / 16) * Math.PI * 2;
+      // Offset by half a step. On the whole numbers one lamp lands at angle
+      // zero, which is dead on the gate-to-pillar-to-arch sightline — the one
+      // line on the site that has to stay clear, and the one the arrival flies
+      // straight down.
+      const a = ((i + 0.5) / 16) * Math.PI * 2;
       out.push({
         x: PLAZA.centreX + Math.sin(a) * r,
         z: PLAZA.centreZ + Math.cos(a) * r,

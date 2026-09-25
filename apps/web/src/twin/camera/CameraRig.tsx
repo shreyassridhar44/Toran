@@ -53,6 +53,24 @@ export function CameraRig({
   const warm = useRef({ steady: 0, since: 0, last: 0, ready: false });
   const { scene } = useThree();
 
+  /**
+   * `?entry=<ms>` holds the flight at one moment instead of running it.
+   *
+   * An eight beat arrival cannot be composed without seeing each beat, and a
+   * screenshot of a moving camera arrives whenever the GPU gets round to it —
+   * on this hardware several hundred milliseconds late, which is most of a
+   * beat. Frozen, every frame is exactly the pose the keyframes describe.
+   *
+   * Development only. Nothing links to it and the hall never sets it.
+   */
+  const heldAt = useMemo(() => {
+    if (typeof window === 'undefined') return null;
+    const raw = new URLSearchParams(window.location.search).get('entry');
+    if (raw === null) return null;
+    const ms = Number(raw);
+    return Number.isFinite(ms) ? Math.max(0, ms) : null;
+  }, []);
+
   const finish = useCallback(() => {
     running.current = false;
     started.current = null;
@@ -65,6 +83,15 @@ export function CameraRig({
   // Start, or restart on replay.
   useEffect(() => {
     setEntered(false);
+    if (heldAt !== null) {
+      flight.at(heldAt / ENTRY_DURATION_MS, position, target);
+      camera.position.copy(position);
+      camera.lookAt(target);
+      running.current = false;
+      recordTiming('entryStart');
+      recordTiming('entryEnd');
+      return;
+    }
     if (prefersReducedMotion() || skipEntry) {
       camera.position.set(...HOME.position);
       camera.lookAt(...HOME.target);
@@ -90,6 +117,7 @@ export function CameraRig({
     gl,
     scene,
     skipEntry,
+    heldAt,
   ]);
 
   // Tap to skip.
@@ -134,6 +162,13 @@ export function CameraRig({
     c.setBoundary(BOUNDARY);
     c.boundaryEnclosesCamera = false;
   }, []);
+
+  // No controls while the flight is held. camera-controls applies its own state
+  // to the camera on mount and settles it wherever it thinks the camera should
+  // be, which during the running flight is harmless — every frame re-poses —
+  // but with a single static pose it simply wins, and the held frame came out
+  // at the canvas's initial camera instead of the beat asked for.
+  if (heldAt !== null) return null;
 
   return (
     <CameraControls

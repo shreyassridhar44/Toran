@@ -7,6 +7,7 @@
  */
 import fs from 'node:fs';
 import puppeteer from 'puppeteer-core';
+import { ENTRY_DURATION_MS } from '../apps/web/src/twin/camera/director.ts';
 
 const BASE = process.env.BASE ?? 'http://127.0.0.1:4173';
 const GPU = [
@@ -84,7 +85,11 @@ for (const tier of ['high', 'low']) {
     t.entryStart < 3000,
     `${Math.round(t.entryStart)}ms from navigation`,
   );
-  check(`[${tier}] entry under 4s`, entryMs < 4000, `${Math.round(entryMs)}ms`);
+  // Eight seconds, not four. The arrival now crosses the whole site — over the
+  // road, through the gate, past the Ashoka pillar and into the hall — and the
+  // brief allows up to eight for it. A visitor who does not want to wait taps,
+  // which is checked below, and reduced motion skips it outright.
+  check(`[${tier}] entry under 8s`, entryMs < 8000, `${Math.round(entryMs)}ms`);
   check(
     `[${tier}] flight holds 60fps`,
     p95 < 20,
@@ -128,7 +133,9 @@ for (const tier of ['high', 'low']) {
     settled: window.__toranTwin,
     hall: window.__hallFrames,
   }));
-  const loading = hall.filter(([at]) => at >= settled.searchStarted && at <= settled.searchReady);
+  const loading = hall.filter(
+    ([at]) => at >= settled.searchStarted && at <= settled.searchReady,
+  );
   console.log(
     `  INFO  [${tier}] hall while the search engine loads  ${loading.length} frames in ${((settled.searchReady - settled.searchStarted) / 1000).toFixed(1)}s, ${loading.filter(([, gap]) => gap > 20).length} over 20ms`,
   );
@@ -137,7 +144,11 @@ for (const tier of ['high', 'low']) {
     settled.frame.fps > 57,
     `${settled.frame.fps.toFixed(1)} fps, ${settled.frame.calls} draws, ${settled.frame.triangles.toLocaleString('en')} triangles`,
   );
-  check(`[${tier}] draw call budget`, settled.frame.calls <= 150, `${settled.frame.calls} of 150`);
+  check(
+    `[${tier}] draw call budget`,
+    settled.frame.calls <= 150,
+    `${settled.frame.calls} of 150`,
+  );
   check(
     `[${tier}] triangle budget`,
     settled.frame.triangles <= 250000,
@@ -200,7 +211,7 @@ const browser = await puppeteer.launch({
   check(
     'a tap during the entry skips it',
     took < 1500,
-    `ended at ${Math.round(took)}ms of 3600`,
+    `ended at ${Math.round(took)}ms of ${ENTRY_DURATION_MS}`,
   );
   await page.close();
 }

@@ -17,7 +17,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { CameraRig } from './camera/CameraRig';
 import { ENTRY } from './camera/director';
-import { zoneAt } from './campus';
+import { CITY_FADES_AT, drawsBothZones, zoneAt } from './campus';
 import { fixtureHealth } from '@/fleet/devices';
 import { hallMaterials } from './materials';
 import { QualityContext, type Tier } from './quality';
@@ -132,14 +132,21 @@ function Probe({ tier }: { tier: Tier }) {
 function ZoneCull({
   exterior,
   interior,
+  city,
 }: {
   exterior: React.RefObject<THREE.Group | null>;
   interior: React.RefObject<THREE.Group | null>;
+  city: React.RefObject<THREE.Group | null>;
 }) {
   useFrame(({ camera }) => {
-    const outside = zoneAt(camera.position.z) === 'campus';
-    if (exterior.current !== null) exterior.current.visible = outside;
-    if (interior.current !== null) interior.current.visible = !outside;
+    const z = camera.position.z;
+    const outside = zoneAt(z) === 'campus';
+    // Both, across the threshold, so the hall can be seen through the arch
+    // from the steps and the arch through the hall from just inside it.
+    const both = drawsBothZones(z);
+    if (exterior.current !== null) exterior.current.visible = outside || both;
+    if (interior.current !== null) interior.current.visible = !outside || both;
+    if (city.current !== null) city.current.visible = z > CITY_FADES_AT;
   });
   return null;
 }
@@ -156,6 +163,7 @@ function Scene({
   const health = useMemo(() => fixtureHealth(), []);
   const exterior = useRef<THREE.Group>(null);
   const interior = useRef<THREE.Group>(null);
+  const city = useRef<THREE.Group>(null);
   return (
     <>
       <color attach="background" args={['#0b0a09']} />
@@ -221,7 +229,9 @@ function Scene({
       <group ref={exterior}>
         <Memorial />
         <Campus />
-        <City />
+        <group ref={city}>
+          <City />
+        </group>
         <Toran />
       </group>
 
@@ -245,7 +255,7 @@ function Scene({
         <Atmosphere />
       </group>
 
-      <ZoneCull exterior={exterior} interior={interior} />
+      <ZoneCull exterior={exterior} interior={interior} city={city} />
       <CameraRig replayToken={replayToken} skipEntry={skipEntry} />
       <TransitionDirector tier={tier} />
       <Probe tier={tier} />
