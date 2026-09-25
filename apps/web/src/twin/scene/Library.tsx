@@ -17,7 +17,8 @@ import { mulberry32 } from '../random';
 
 const BACK_X = HALL.halfWidth - 0.1;
 const DEPTH = 0.85;
-const Z_START = -1.5;
+// Behind the atrium: in front of that line the room is the domed rotunda.
+const Z_START = HALL.atriumBackZ - 1.5;
 const Z_END = -25;
 const BAYS = 10;
 const LEVELS = 12;

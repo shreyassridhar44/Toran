@@ -18,6 +18,7 @@ import * as THREE from 'three';
 import { CameraRig } from './camera/CameraRig';
 import { ENTRY } from './camera/director';
 import { CITY_FADES_AT, drawsBothZones, zoneAt } from './campus';
+import { HALL } from './layout';
 import { fixtureHealth } from '@/fleet/devices';
 import { hallMaterials } from './materials';
 import { QualityContext, type Tier } from './quality';
@@ -30,7 +31,9 @@ import { Library } from './scene/Library';
 import { Lights } from './scene/Lights';
 import { Campus } from './scene/campus/Campus';
 import { City } from './scene/city/City';
+import { Atrium } from './scene/interior/Atrium';
 import { Memorial } from './scene/Memorial';
+import { Statue } from './scene/interior/Statue';
 import { Shadows } from './scene/Shadows';
 import { Toran } from './scene/Toran';
 import { recordTiming, telemetry } from './telemetry';
@@ -245,14 +248,24 @@ function Scene({
           with ground, city and sky is what took the arrival to seventeen frames
           a second.
         */}
-        <Lights />
-        <Architecture />
-        <Floor />
-        <Library />
-        <Gallery />
-        <Shadows />
+        {/*
+          The hall stands on the memorial's plinth, two metres up. Everything
+          inside is modelled with its floor at zero and lifted here — except the
+          devices, whose positions are world coordinates because the fly-in
+          reads them straight out of the fleet config to aim the camera.
+        */}
+        <group position={[0, HALL.floorY, 0]}>
+          <Lights />
+          <Architecture />
+          <Floor />
+          <Library />
+          <Gallery />
+          <Shadows />
+          <Atmosphere />
+        </group>
+        <Atrium />
+        <Statue />
         <Devices health={health} />
-        <Atmosphere />
       </group>
 
       <ZoneCull exterior={exterior} interior={interior} city={city} />

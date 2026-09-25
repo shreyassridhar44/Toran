@@ -14,10 +14,14 @@ import { useMemo } from 'react';
 import * as THREE from 'three';
 import { box, mergeParts, type Part } from '../geometry';
 import { hallMaterials } from '../materials';
-import { HALL, WINDOW, hallCentreZ, hallLength } from '../layout';
+import { HALL, WINDOW } from '../layout';
 
 const W = HALL.halfWidth;
 const H = HALL.height;
+
+/** The nave: everything behind the atrium. */
+const naveLength = HALL.atriumBackZ - HALL.back;
+const naveCentreZ = (HALL.atriumBackZ + HALL.back) / 2;
 
 function chaityaArch(): THREE.BufferGeometry {
   // A horseshoe arch, the gavaksha of the Buddhist cave halls: the curve runs
@@ -70,52 +74,39 @@ export function Architecture() {
     const carved: Part[] = [];
     const dark: Part[] = [];
 
-    // The front of the hall is now the memorial's rotunda: the drum encloses
-    // this end of the nave and its recessed portal is the doorway. The carved
-    // temple facade that used to stand at HALL.front is gone with it — it was
-    // seventeen metres of elevation in front of a building that has its own.
-    // A short return wall either side of the opening is all that is left, and
-    // it is hidden inside the drum. Memorial.tsx owns what a visitor sees.
-    const dw = HALL.doorHalfWidth;
-    for (const sx of [-1, 1]) {
-      plain.push({
-        geometry: box(W - dw, H, 0.8),
-        position: [sx * (dw + (W - dw) / 2), H / 2, HALL.front - 2.4],
-      });
-    }
-    plain.push({
-      geometry: box(dw * 2, H - HALL.doorHeight, 0.8),
-      position: [0, (H + HALL.doorHeight) / 2, HALL.front - 2.4],
-    });
-
     // Nave walls, back wall and ceiling slab.
+    //
+    // The nave begins where the atrium ends. In front of that line the room is
+    // the rotunda: a domed drum twenty-six metres across, with its own shell.
+    // Running the rectangular walls the full length put them straight through
+    // it, and the timeline panels hanging on them ended up outside the building.
     plain.push({
-      geometry: box(0.6, H, hallLength),
-      position: [-(W + 0.3), H / 2, hallCentreZ],
+      geometry: box(0.6, H, naveLength),
+      position: [-(W + 0.3), H / 2, naveCentreZ],
     });
     plain.push({
-      geometry: box(0.6, H, hallLength),
-      position: [W + 0.3, H / 2, hallCentreZ],
+      geometry: box(0.6, H, naveLength),
+      position: [W + 0.3, H / 2, naveCentreZ],
     });
     plain.push({
       geometry: box(W * 2 + 1.2, H, 0.6),
       position: [0, H / 2, HALL.back - 0.3],
     });
     dark.push({
-      geometry: box(W * 2 + 1.2, 0.5, hallLength + 1.2),
-      position: [0, H + 0.25, hallCentreZ],
+      geometry: box(W * 2 + 1.2, 0.5, naveLength + 1.2),
+      position: [0, H + 0.25, naveCentreZ],
     });
 
     // Interior frieze in carved red sandstone, per the building record. It
     // runs on the right wall only: the left wall carries the clerestory
     // windows, and a frieze at this height would cut straight across them.
     carved.push({
-      geometry: box(0.24, 1.0, hallLength),
-      position: [W - 0.12, 9.4, hallCentreZ],
+      geometry: box(0.24, 1.0, naveLength),
+      position: [W - 0.12, 9.4, naveCentreZ],
     });
     plain.push({
-      geometry: box(0.5, 0.3, hallLength),
-      position: [W - 0.25, 10.05, hallCentreZ],
+      geometry: box(0.5, 0.3, naveLength),
+      position: [W - 0.25, 10.05, naveCentreZ],
     });
     carved.push({
       geometry: box(W * 2, 1.0, 0.24),
@@ -145,8 +136,8 @@ export function Architecture() {
     }
     for (const sx of [-1, 1]) {
       plain.push({
-        geometry: box(0.6, 0.7, hallLength),
-        position: [sx * HALL.colonnadeX, H - 0.35, hallCentreZ],
+        geometry: box(0.6, 0.7, naveLength),
+        position: [sx * HALL.colonnadeX, H - 0.35, naveCentreZ],
       });
     }
 
@@ -179,8 +170,8 @@ export function Architecture() {
   }, []);
 
   const inlay = useMemo(() => {
-    // A processional path in brass, from the threshold to the dais.
-    const length = HALL.front - (HALL.archZ + 1.7);
+    // A processional path in brass, from the atrium to the dais.
+    const length = HALL.atriumBackZ - (HALL.archZ + 1.7);
     const z = HALL.archZ + 1.7 + length / 2;
     return mergeParts([
       { geometry: box(0.07, 0.012, length), position: [-1.15, 0.006, z] },

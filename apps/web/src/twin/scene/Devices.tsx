@@ -20,6 +20,7 @@ import type { DeviceHealth } from '@toran/contracts';
 import { useI18n, type MessageKey } from '@/i18n';
 import { DEVICES, statusOf, type HallDevice } from '@/fleet/devices';
 import { mergeParts, type Part } from '../geometry';
+import { HALL } from '../layout';
 import { hallMaterials } from '../materials';
 import { label as labelTexture, screen as screenTexture } from '../textures';
 import { useTwinState } from '../state';
@@ -209,7 +210,7 @@ function Marker() {
     const inset = device.form === 'wall' ? 1.4 : 0;
     mesh.position.set(
       x + Math.sin(device.rotationY) * inset,
-      0.02,
+      HALL.floorY + 0.02,
       z + Math.cos(device.rotationY) * inset,
     );
     const pulse = 1 + Math.sin(state.clock.elapsedTime * 2.2) * 0.03;

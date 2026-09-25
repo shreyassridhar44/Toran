@@ -18,7 +18,7 @@
  *     This is the one moment the lions are seen at full size.
  *  6. The building fills the frame: both wings splayed, the drum centred.
  *  7. The foot of the steps, the arch dead ahead.
- *  8. Through the arch and into the hall.
+ *  8. Through the arch and into the atrium, arriving on the statue.
  *
  * Easing is sine in and out. Of the common curves it has the lowest peak
  * velocity for a given duration, about 1.57 times the average against 3 for a
@@ -92,13 +92,13 @@ export const ENTRY: readonly Shot[] = [
   { position: [3, 12, 46], target: [0, 12, 4], weight: 1.1 },
 
   // The foot of the steps, the arch dead ahead.
-  { position: [0, 3.4, 17], target: [0, 6.5, 1], weight: 0.85 },
+  { position: [0, 5.4, 17], target: [0, 7.5, 1], weight: 0.85 },
 
   // Through the arch. The zone boundary is the plane of the opening, so the
   // exterior is culled and the hall revealed while the camera is inside the two
   // and a half metre reveal of the doorway, where almost nothing else is in
   // view and the change cannot be seen.
-  { position: [0, 2.5, 9.0], target: [0, 3.6, -26], weight: 0.75 },
+  { position: [0, 4.5, 9.0], target: [0, 5.4, 0], weight: 0.75 },
 ];
 
 export const HOME: Shot = ENTRY[ENTRY.length - 1] as Shot;

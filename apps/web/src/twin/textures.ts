@@ -1139,3 +1139,97 @@ export function plume(): THREE.CanvasTexture {
   ctx.putImageData(img, 0, 0);
   return toTexture(c, false);
 }
+
+// ---------- the interior ----------
+
+/**
+ * The inscription on the statue's pedestal, in gold on transparent.
+ *
+ * Bilingual, as it is on the real one: the honour above, the name below, the
+ * dates under that. Drawn as a decal rather than modelled in relief — raised
+ * letters are a bump map's job, and at nine metres nobody reads them in relief
+ * anyway.
+ */
+export function inscription(width = 512, height = 176): THREE.CanvasTexture {
+  const [c, ctx] = canvas(width, height);
+  ctx.clearRect(0, 0, width, height);
+  ctx.textAlign = 'center';
+
+  const gold = '#c89b52';
+  const line = (text: string, y: number, px: number, font: string) => {
+    ctx.font = `600 ${px}px ${font}`;
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillText(text, width / 2 + 1.5, y + 2);
+    ctx.fillStyle = gold;
+    ctx.fillText(text, width / 2, y);
+  };
+
+  line('भारत रत्न', 34, 26, FONT_INDIC);
+  line('BHARAT RATNA', 60, 22, FONT_UI);
+  line('डॉ॰ भीमराव अम्बेडकर', 100, 30, FONT_INDIC);
+  line('DR. BHIMRAO AMBEDKAR', 130, 28, FONT_UI);
+  line('1891 — 1956', 158, 18, FONT_MONO);
+
+  return toTexture(c, true);
+}
+
+/**
+ * The atrium ceiling: dark panels pierced by a grid of small recessed lights.
+ *
+ * image8's dome is perforated and almost black, with pinpoints of warm light in
+ * it. Modelling several hundred coffers would cost more than the statue under
+ * them; this is the same reading at one texture, and the pinpoints are drawn
+ * bright enough to survive the bloom threshold.
+ */
+export function coffer(size = 256): THREE.CanvasTexture {
+  const [c, ctx] = canvas(size, size);
+
+  ctx.fillStyle = '#14120f';
+  ctx.fillRect(0, 0, size, size);
+
+  // The panel joints.
+  ctx.strokeStyle = 'rgba(70,64,56,0.55)';
+  ctx.lineWidth = 2;
+  const cells = 4;
+  for (let i = 1; i < cells; i++) {
+    const at = (i / cells) * size;
+    ctx.beginPath();
+    ctx.moveTo(at, 0);
+    ctx.lineTo(at, size);
+    ctx.moveTo(0, at);
+    ctx.lineTo(size, at);
+    ctx.stroke();
+  }
+
+  // Perforation: a dense field of small dark holes, and one downlight per
+  // panel among them.
+  const step = size / 32;
+  ctx.fillStyle = 'rgba(0,0,0,0.75)';
+  for (let y = step; y < size; y += step) {
+    for (let x = step; x < size; x += step) {
+      ctx.beginPath();
+      ctx.arc(x, y, 1.3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  for (let cy = 0; cy < cells; cy++) {
+    for (let cx = 0; cx < cells; cx++) {
+      const x = (cx + 0.5) * (size / cells);
+      const y = (cy + 0.5) * (size / cells);
+      const glow = ctx.createRadialGradient(x, y, 0, x, y, size / cells / 2.4);
+      glow.addColorStop(0, '#ffe9c4');
+      glow.addColorStop(0.24, 'rgba(255,214,150,0.55)');
+      glow.addColorStop(1, 'rgba(255,196,120,0)');
+      ctx.fillStyle = glow;
+      ctx.fillRect(
+        x - size / cells / 2,
+        y - size / cells / 2,
+        size / cells,
+        size / cells,
+      );
+    }
+  }
+
+  return toTexture(c, true, true);
+}

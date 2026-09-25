@@ -101,10 +101,14 @@ export function hallMaterials(): HallMaterials {
     floor: new THREE.MeshStandardMaterial({
       map: tiles.map,
       roughnessMap: tiles.roughness,
-      color: '#6b6157',
-      roughness: 0.42,
-      metalness: 0.1,
-      envMapIntensity: 0.25,
+      // Dark polished granite, as in image5 and image8, not the warm grey it
+      // was. Through the open arch the daylight outside falls on this floor,
+      // and at the old tone it read as more sandstone paving rather than as
+      // the inside of a building.
+      color: '#3c3833',
+      roughness: 0.38,
+      metalness: 0.14,
+      envMapIntensity: 0.3,
     }),
     ground: new THREE.MeshStandardMaterial({ color: '#241d17', roughness: 1 }),
     window: new THREE.MeshBasicMaterial({
@@ -167,8 +171,15 @@ export interface CampusMaterials {
   louvreEdge: THREE.MeshStandardMaterial;
   /** The gold of the gate, the lettering and the mudra bosses. */
   gold: THREE.MeshStandardMaterial;
-  /** Patinated bronze: the statue, the hands, the lions. */
+  /** Patinated bronze: the mudra hands and the lions, outdoors in daylight. */
   verdigris: THREE.MeshStandardMaterial;
+  /**
+   * The statue, indoors. The same patina, but far less metallic: a metal with
+   * nothing bright to reflect renders close to black, and the atrium is a black
+   * room. The statue has to be modelled by its own lighting, not by a
+   * reflection of a room that has none.
+   */
+  bronze: THREE.MeshStandardMaterial;
   /** Polished dark granite: the pillar shaft, the statue pedestal. */
   granite: THREE.MeshStandardMaterial;
   /** The two alternating tones of the ring plaza. */
@@ -191,6 +202,10 @@ export interface CampusMaterials {
   bark: THREE.MeshStandardMaterial;
   /** The guard at the gate. Delhi police khaki. */
   khaki: THREE.MeshStandardMaterial;
+  /** The glass balustrade around the statue's well. */
+  glazing: THREE.MeshStandardMaterial;
+  /** Its handrail, and the stanchions in the galleries. */
+  steel: THREE.MeshStandardMaterial;
   /** Lane markings on the road. */
   marking: THREE.MeshStandardMaterial;
   /** Car paintwork, autorickshaw green, bus red. */
@@ -271,6 +286,15 @@ export function campusMaterials(): CampusMaterials {
       metalness: 0.62,
       roughness: 0.62,
     }),
+    bronze: new THREE.MeshStandardMaterial({
+      color: '#5c9186',
+      metalness: 0.28,
+      roughness: 0.46,
+      // A trace of self-illumination, so the shaded side of the bronze falls to
+      // a patina green rather than to pure black.
+      emissive: new THREE.Color('#122a28'),
+      emissiveIntensity: 0.4,
+    }),
     granite: new THREE.MeshStandardMaterial({
       color: '#2a2724',
       roughness: 0.3,
@@ -333,6 +357,22 @@ export function campusMaterials(): CampusMaterials {
     }),
     bark: new THREE.MeshStandardMaterial({ color: '#4a3a2c', roughness: 0.96 }),
     khaki: new THREE.MeshStandardMaterial({ color: '#8a7b55', roughness: 0.9 }),
+    // Barely there. A balustrade that reads as glass is one you notice only
+    // where its edge catches the light.
+    glazing: new THREE.MeshStandardMaterial({
+      color: '#9fd4dc',
+      transparent: true,
+      opacity: 0.14,
+      roughness: 0.06,
+      metalness: 0.1,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    }),
+    steel: new THREE.MeshStandardMaterial({
+      color: '#b7bcc0',
+      metalness: 0.85,
+      roughness: 0.28,
+    }),
     marking: new THREE.MeshStandardMaterial({ color: '#d8d2c2', roughness: 0.85 }),
     // One colour for every car, because at the distance the road is seen a
     // fleet of different colours reads as noise rather than as traffic.

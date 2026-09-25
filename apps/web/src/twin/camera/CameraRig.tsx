@@ -15,13 +15,15 @@ import { CameraControls } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
+import { HALL } from '../layout';
 import { useTwinState } from '../state';
 import { recordTiming, telemetry } from '../telemetry';
 import { ENTRY, ENTRY_DURATION_MS, Flight, HOME, prefersReducedMotion } from './director';
 
+/** Where the visitor may look from, on the hall's floor rather than the ground. */
 const BOUNDARY = new THREE.Box3(
-  new THREE.Vector3(-4, 1.5, -19),
-  new THREE.Vector3(4, 5, 5),
+  new THREE.Vector3(-4, HALL.floorY + 1.5, -19),
+  new THREE.Vector3(4, HALL.floorY + 5, 7),
 );
 
 export function CameraRig({
